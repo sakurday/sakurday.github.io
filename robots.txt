@@ -1,0 +1,3 @@
+User-agent: *
+Disallow:
+Sitemap: https://sakurday.github.io/sakurday.github.io/sitemap.xml
