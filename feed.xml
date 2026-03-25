@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
     <title>Sakurday&#x27;s Website</title>
-    <link href="https://sakurday.github.io/feed.xml" rel="self" />
-    <link href="https://sakurday.github.io" />
+    <link href="https://www.sakurday.top/feed.xml" rel="self" />
+    <link href="https://www.sakurday.top" />
     <updated>2026-03-25T13:14:49+08:00</updated>
     <author>
         <name>Sakurday</name>
     </author>
-    <id>https://sakurday.github.io</id>
+    <id>https://www.sakurday.top</id>
 
     <entry>
         <title>我的第一个网站</title>
         <author>
             <name>Sakurday</name>
         </author>
-        <link href="https://sakurday.github.io/wo-de-di-yi-ge-wang-zhan.html"/>
-        <id>https://sakurday.github.io/wo-de-di-yi-ge-wang-zhan.html</id>
+        <link href="https://www.sakurday.top/wo-de-di-yi-ge-wang-zhan.html"/>
+        <id>https://www.sakurday.top/wo-de-di-yi-ge-wang-zhan.html</id>
 
         <updated>2026-03-25T13:14:48+08:00</updated>
             <summary type="html">
