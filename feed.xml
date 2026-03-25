@@ -3,14 +3,14 @@
     <title>Sakurday&#x27;s Website</title>
     <link href="https://www.sakurday.top/feed.xml" rel="self" />
     <link href="https://www.sakurday.top" />
-    <updated>2026-03-25T13:14:49+08:00</updated>
+    <updated>2026-03-25T14:07:13+08:00</updated>
     <author>
         <name>Sakurday</name>
     </author>
     <id>https://www.sakurday.top</id>
 
     <entry>
-        <title>我的第一个网站</title>
+        <title>关于这个网站</title>
         <author>
             <name>Sakurday</name>
         </author>
@@ -20,12 +20,16 @@
         <updated>2026-03-25T13:14:48+08:00</updated>
             <summary type="html">
                 <![CDATA[
-                    喵~
+                    其实我之前有做过网站的，但是很可惜，当时只会手搓html，写出来的看起来太丑了，再加上我没有自己的域名，所以到后面就没有继续下去了。&hellip;
                 ]]>
             </summary>
         <content type="html">
             <![CDATA[
-                <p>喵~</p>
+                <p>其实我之前有做过网站的，但是很可惜，当时只会手搓html，写出来的看起来太丑了，再加上我没有自己的域名，所以到后面就没有继续下去了。</p>
+<p>上了大学后，我的自由时间更多了，也就想折腾了，于是购买了域名，并且在2025年末利用GitHub pages搭建了属于自己的第一个网站。但是当时是fork的一个很复杂的模板，很多东西调试起来非常复杂，所以这个网站就闲置下去了。</p>
+<p>而今天（2026年3月底），我重新燃起了<span style="text-decoration: line-through;">写网站</span>折腾的激情，于是换用了更简单粗暴但好用的publii重新搭建了这个网站。利用publii的可视化编辑和一键提交，网站的维护也就轻松的多了（在学校已经被高数大物整怕了在这方面我真的不想深入研究了）。</p>
+<p>如果此网站出现了什么问题，欢迎指正！</p>
+<figure class="post__image"><img loading="lazy"  src="https://www.sakurday.top/media/posts/1/cf0fc2e9e76a723226467d256fb2dbae-2.png" alt="" width="512" height="433" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://www.sakurday.top/media/posts/1/responsive/cf0fc2e9e76a723226467d256fb2dbae-2-xs.png 640w ,https://www.sakurday.top/media/posts/1/responsive/cf0fc2e9e76a723226467d256fb2dbae-2-sm.png 768w ,https://www.sakurday.top/media/posts/1/responsive/cf0fc2e9e76a723226467d256fb2dbae-2-md.png 1024w ,https://www.sakurday.top/media/posts/1/responsive/cf0fc2e9e76a723226467d256fb2dbae-2-lg.png 1366w ,https://www.sakurday.top/media/posts/1/responsive/cf0fc2e9e76a723226467d256fb2dbae-2-xl.png 1600w ,https://www.sakurday.top/media/posts/1/responsive/cf0fc2e9e76a723226467d256fb2dbae-2-2xl.png 1920w"></figure>
             ]]>
         </content>
     </entry>
