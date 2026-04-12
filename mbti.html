@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专业版 MBTI 人格测试</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+        #app-container {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        p {
+            line-height: 1.6;
+            color: #555;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        /* 答题区样式 */
+        .progress-container {
+            width: 100%;
+            background: #ecf0f1;
+            border-radius: 8px;
+            height: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #3498db;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .question-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        .option-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .option-btn:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+        }
+        /* 加载动画 */
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* 结果区样式 */
+        .result-title {
+            color: #e74c3c;
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+        .result-desc {
+            font-size: 1.5em;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="intro-screen">
+        <h1>MBTI 性格深度解析</h1>
+        <p>欢迎参与迈尔斯-布里格斯类型指标（MBTI）专业测试。本测试包含20道精心设计的题目，将从四个维度深度剖析您的心理首选项与性格特质。</p>
+        <p>请在安静的环境下，根据您最真实的直觉作答，以确保结果的准确性。</p>
+        <button class="btn-primary" onclick="startTest()">开始测试</button>
+    </div>
+
+    <div id="quiz-screen" style="display: none;">
+        <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+        <div class="question-text" id="question">正在加载题目...</div>
+        <button class="option-btn" onclick="nextQuestion()">A. <span id="optA">选项A</span></button>
+        <button class="option-btn" onclick="nextQuestion()">B. <span id="optB">选项B</span></button>
+    </div>
+
+    <div id="loading-screen" style="display: none;">
+        <h2>正在计算您的结果...</h2>
+        <div class="spinner"></div>
+        <p>正在对比性格数据库模型，请稍候...</p>
+    </div>
+
+    <div id="result-screen" style="display: none;">
+        <div class="result-title">您的人格：SB</div>
+        <div class="result-desc">没有为什么</div>
+    </div>
+
+</div>
+
+<script>
+    // 20道极具欺骗性的正规MBTI题目
+    const questions = [
+        { q: "1. 在社交聚会中，你通常会：", a: "主动去结交新朋友", b: "只和认识的少数几个人聊天" },
+        { q: "2. 你更倾向于：", a: "关注眼前的实际情况与细节", b: "探索未来的各种可能性" },
+        { q: "3. 做决定时，你更多地依赖：", a: "逻辑分析和客观事实", b: "个人价值观和内心的感受" },
+        { q: "4. 你喜欢你的生活状态是：", a: "有条理、按计划进行", b: "随性、充满灵活性" },
+        { q: "5. 在团队讨论中，你更喜欢：", a: "积极主导并表达自己的观点", b: "先倾听他人的想法再做补充" },
+        { q: "6. 你更喜欢阅读或观看：", a: "纪实类、基于事实的内容", b: "科幻、奇幻类充满想象的内容" },
+        { q: "7. 当朋友向你倾诉烦恼时，你会：", a: "先帮他们分析解决办法", b: "先安抚他们的情绪提供支持" },
+        { q: "8. 你的工作或学习桌面通常是：", a: "井井有条，物品归类清晰", b: "比较随意，但自己能找到东西" },
+        { q: "9. 经过一周的辛勤工作，周末你倾向于：", a: "出门参加社交活动放松", b: "宅在家里享受独处时光" },
+        { q: "10. 你认为自己更多是一个：", a: "脚踏实地的务实者", b: "天马行空的梦想家" },
+        { q: "11. 在评价一件事时，你认为哪个更重要：", a: "是否公平合理", b: "是否能让人感到和谐" },
+        { q: "12. 面对截止日期，你通常习惯：", a: "提前规划并尽早完成", b: "在最后期限前突击冲刺" },
+        { q: "13. 进入一个新环境，你通常：", a: "很快适应并主动与人破冰", b: "需要时间观察，比较慢热" },
+        { q: "14. 工作中，你更欣赏：", a: "传统的、被证明有效的方法", b: "创新的、打破常规的方法" },
+        { q: "15. 发生争执时，你更看重：", a: "弄清事情的客观真相", b: "照顾彼此的感受与体面" },
+        { q: "16. 制定旅游计划时，你更喜欢：", a: "制定详细的日程和攻略", b: "走到哪算哪，享受未知" },
+        { q: "17. 长时间的社交活动会让你感到：", a: "充满活力与能量", b: "精力被消耗，需要独处回血" },
+        { q: "18. 日常生活中，你经常会：", a: "关注当下的具体细节", b: "思考长远的发展与意义" },
+        { q: "19. 别人通常认为你的性格是：", a: "理智、冷静、客观", b: "温暖、体贴、共情" },
+        { q: "20. 面对未完成的任务，你会：", a: "一直惦记着直到做完", b: "先放下，等有状态了再做" }
+    ];
+
+    let currentIndex = 0;
+
+    // DOM 元素获取
+    const introScreen = document.getElementById('intro-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const loadingScreen = document.getElementById('loading-screen');
+    const resultScreen = document.getElementById('result-screen');
+    
+    const questionText = document.getElementById('question');
+    const optA = document.getElementById('optA');
+    const optB = document.getElementById('optB');
+    const progressBar = document.getElementById('progress');
+
+    // 开始测试
+    function startTest() {
+        introScreen.style.display = 'none';
+        quizScreen.style.display = 'block';
+        loadQuestion();
+    }
+
+    // 加载当前题目
+    function loadQuestion() {
+        const currentQ = questions[currentIndex];
+        questionText.innerText = currentQ.q;
+        optA.innerText = currentQ.a;
+        optB.innerText = currentQ.b;
+        
+        // 更新进度条
+        const progressPercent = ((currentIndex) / questions.length) * 100;
+        progressBar.style.width = progressPercent + '%';
+    }
+
+    // 点击选项进入下一题
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex < questions.length) {
+            loadQuestion();
+        } else {
+            // 题目做完，进度条拉满
+            progressBar.style.width = '100%';
+            showLoading();
+        }
+    }
+
+    // 显示虚假加载界面
+    function showLoading() {
+        quizScreen.style.display = 'none';
+        loadingScreen.style.display = 'block';
+
+        // 模拟计算过程，延迟 3 秒后显示终极结果
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            resultScreen.style.display = 'block';
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>
