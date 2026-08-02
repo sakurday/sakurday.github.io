@@ -75,6 +75,8 @@
 > [BiliBili账号](https://space.bilibili.com/3546884272556065)
 >
 > [抖音账号](https://v.douyin.com/GosC-cEH60Q/)
+>
+> [小红书账号](https://xhslink.cn/m/3HO1uX8N5Nr)
 
 ## 2.社区运营
 
