@@ -68,7 +68,7 @@
   --spacing-2xl: 4rem;
 
   /* 布局 */
-  --content-max-width: 42rem;
+  --content-max-width: 60rem;
   /* 约672px，舒适阅读宽度 */
   --content-padding: 1.5rem;
   --border-radius: 6px;
@@ -935,17 +935,24 @@ p {
   margin-bottom: 0.6rem;  /* 按你喜欢的值调整 */
 }
 
-/* 手机端优化：减少两侧空白，放大字体 */
+/* 手机端：消除两侧空白 + 整体放大文字 */
 @media (max-width: 768px) {
-  :root {
-    --content-padding: 0.8rem;   /* 原来 1.2rem，现在更窄 */
-    --font-size-base: 1.1rem;    /* 原来 1rem，加大到约 17.6px */
+  html {
+    font-size: 150%;               /* 全局等比例放大 */
+  }
+  body {
+    max-width: none;               /* 解除宽度限制 */
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 0.5rem;            /* 可改为 0 或 0.3rem，按需调整 */
   }
 }
 
 @media (max-width: 480px) {
-  :root {
-    --content-padding: 0.6rem;   /* 原来 1rem，进一步减少 */
-    --font-size-base: 1.15rem;   /* 约 18.4px，阅读更舒适 */
+  html {
+    font-size: 150%;
+  }
+  body {
+    padding: 0 0.3rem;
   }
 }
