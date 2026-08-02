@@ -51,7 +51,7 @@
   --font-family-mono: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code",
     "Source Code Pro", Menlo, Consolas, "Courier New", monospace;
 
-  --font-size-base: 1.0625rem;
+  --font-size-base: 1.5rem;
   /* 约17px */
   --font-size-sm: 0.9rem;
   --font-size-xs: 0.8rem;
@@ -938,7 +938,7 @@ p {
 /* 手机端：消除两侧空白 + 整体放大文字 */
 @media (max-width: 980px) {
   html {
-    font-size: 200%;               /* 全局等比例放大 */
+    font-size: 120%;               /* 全局等比例放大 */
   }
   body {
     max-width: none;               /* 解除宽度限制 */
