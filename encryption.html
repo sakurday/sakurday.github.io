@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>🔒 文本加密解密工具</title>
+    <style>
+        /* ========== CSS 变量与主题 ========== */
+        :root {
+            --bg: #f5f5f7;
+            --bg-secondary: #eef0f3;
+            --card-bg: #ffffff;
+            --text: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --text-muted: #86868b;
+            --border: #d2d2d7;
+            --border-focus: #0071e3;
+            --accent: #0071e3;
+            --accent-hover: #0077ed;
+            --accent-light: #e8f2ff;
+            --danger: #ff3b30;
+            --danger-light: #fff0ef;
+            --success: #34c759;
+            --success-light: #e8f8ed;
+            --warning: #ff9500;
+            --warning-light: #fff5e8;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --font-mono: 'SF Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', 'Menlo', 'Courier New', monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f0f12;
+            --bg-secondary: #16161a;
+            --card-bg: #1c1c22;
+            --text: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --text-muted: #68686e;
+            --border: #2e2e36;
+            --border-focus: #0a84ff;
+            --accent: #0a84ff;
+            --accent-hover: #409cff;
+            --accent-light: #0a2a4a;
+            --danger: #ff453a;
+            --danger-light: #2d1a1a;
+            --success: #32d74b;
+            --success-light: #1a2d20;
+            --warning: #ff9f0a;
+            --warning-light: #2d251a;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #0f0f12;
+                --bg-secondary: #16161a;
+                --card-bg: #1c1c22;
+                --text: #f5f5f7;
+                --text-secondary: #a1a1a6;
+                --text-muted: #68686e;
+                --border: #2e2e36;
+                --border-focus: #0a84ff;
+                --accent: #0a84ff;
+                --accent-hover: #409cff;
+                --accent-light: #0a2a4a;
+                --danger: #ff453a;
+                --danger-light: #2d1a1a;
+                --success: #32d74b;
+                --success-light: #1a2d20;
+                --warning: #ff9f0a;
+                --warning-light: #2d251a;
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+                --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        /* ========== 基础重置 ========== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: background var(--transition), color var(--transition);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ========== 主容器 ========== */
+        .container {
+            width: 100%;
+            max-width: 780px;
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            padding: 32px 28px;
+            transition: background var(--transition), box-shadow var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 16px;
+                border-radius: var(--radius-lg);
+            }
+            body {
+                padding: 12px;
+            }
+        }
+
+        /* ========== 头部 ========== */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
+            flex-shrink: 0;
+            transition: background var(--transition), box-shadow var(--transition);
+        }
+
+        [data-theme="dark"] .logo-icon {
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.35);
+        }
+
+        .title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            transition: color var(--transition);
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            letter-spacing: 0;
+            transition: color var(--transition);
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all var(--transition);
+            color: var(--text);
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .theme-toggle:hover {
+            background: var(--border);
+            transform: scale(1.06);
+        }
+        .theme-toggle:active {
+            transform: scale(0.94);
+        }
+
+        /* ========== 模式切换标签 ========== */
+        .mode-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            padding: 4px;
+            margin-bottom: 24px;
+            gap: 4px;
+            border: 1px solid var(--border);
+            transition: background var(--transition), border-color var(--transition);
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 10px 16px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+            font-family: var(--font-sans);
+            letter-spacing: 0.01em;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            position: relative;
+            white-space: nowrap;
+        }
+        .mode-tab:hover {
+            color: var(--text);
+        }
+        .mode-tab.active {
+            background: var(--card-bg);
+            color: var(--accent);
+            box-shadow: var(--shadow-sm);
+        }
+        .mode-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--accent);
+        }
+
+        /* ========== 表单区域 ========== */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            letter-spacing: 0.01em;
+            transition: color var(--transition);
+        }
+
+        .form-label .label-icon {
+            margin-right: 6px;
+            font-size: 1em;
+        }
+
+        .char-count {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 0;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 110px;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.92rem;
+            font-family: var(--font-sans);
+            color: var(--text);
+            resize: vertical;
+            outline: none;
+            transition: all var(--transition);
+            -webkit-appearance: none;
+            appearance: none;
+            line-height: 1.6;
+        }
+        textarea:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-light);
+            background: var(--card-bg);
+        }
+        textarea::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+        textarea[readonly] {
+            cursor: default;
+            color: var(--text);
+            background: var(--bg-secondary);
+            opacity: 0.95;
+        }
+
+        .input-with-toggle {
+            position: relative;
+        }
+        .input-with-toggle textarea {
+            padding-right: 44px;
+        }
+        .toggle-visibility {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-muted);
+            padding: 6px;
+            border-radius: 6px;
+            transition: all var(--transition-fast);
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            line-height: 1;
+        }
+        .toggle-visibility:hover {
+            color: var(--text);
+            background: var(--border);
+        }
+
+        .password-input {
+            position: relative;
+        }
+        .password-input input {
+            width: 100%;
+            padding: 12px 44px 12px 16px;
+            background: var(--bg-secondary);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.92rem;
+            font-family: var(--font-sans);
+            color: var(--text);
+            outline: none;
+            transition: all var(--transition);
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .password-input input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-light);
+            background: var(--card-bg);
+        }
+        .password-input input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+        .password-input .toggle-visibility {
+            right: 4px;
+        }
+
+        /* 密码强度指示器 */
+        .strength-meter {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+            align-items: center;
+        }
+        .strength-bar {
+            height: 4px;
+            flex: 1;
+            border-radius: 2px;
+            background: var(--border);
+            transition: background var(--transition);
+            overflow: hidden;
+        }
+        .strength-bar.filled {
+            background: var(--danger);
+        }
+        .strength-bar.filled.medium {
+            background: var(--warning);
+        }
+        .strength-bar.filled.strong {
+            background: var(--success);
+        }
+        .strength-label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-left: 8px;
+            white-space: nowrap;
+            transition: color var(--transition);
+            min-width: 42px;
+            text-align: right;
+        }
+
+        /* ========== 按钮区域 ========== */
+        .button-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0 16px;
+        }
+        .button-row .btn {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font-sans);
+            letter-spacing: 0.01em;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(0, 113, 227, 0.35);
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+            box-shadow: 0 6px 20px rgba(0, 113, 227, 0.45);
+        }
+        [data-theme="dark"] .btn-primary {
+            box-shadow: 0 4px 14px rgba(10, 132, 255, 0.35);
+        }
+        [data-theme="dark"] .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(10, 132, 255, 0.45);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text);
+            border: 1.5px solid var(--border);
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border);
+            border-color: var(--text-muted);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(52, 199, 89, 0.35);
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #2db84e;
+        }
+
+        .btn-copy {
+            background: var(--success);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(52, 199, 89, 0.35);
+            min-width: 90px;
+        }
+        .btn-copy:hover:not(:disabled) {
+            background: #2db84e;
+            box-shadow: 0 6px 20px rgba(52, 199, 89, 0.45);
+        }
+        .btn-copy.copied {
+            background: #28a745;
+            box-shadow: 0 4px 14px rgba(40, 167, 69, 0.45);
+        }
+
+        /* ========== 输出区域 ========== */
+        .output-group {
+            margin-top: 4px;
+        }
+        .output-group .form-label {
+            margin-bottom: 6px;
+        }
+        .output-box {
+            width: 100%;
+            min-height: 110px;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-family: var(--font-mono);
+            color: var(--text);
+            resize: vertical;
+            outline: none;
+            transition: all var(--transition);
+            -webkit-appearance: none;
+            appearance: none;
+            line-height: 1.6;
+            word-break: break-all;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+        .output-box:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .output-box::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+            font-family: var(--font-sans);
+        }
+        .output-box.has-content {
+            border-color: var(--success);
+            background: var(--success-light);
+        }
+        .output-box.has-error {
+            border-color: var(--danger);
+            background: var(--danger-light);
+        }
+
+        /* ========== 状态提示 ========== */
+        .status-message {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-top: 12px;
+            transition: all var(--transition);
+            opacity: 0;
+            transform: translateY(-4px);
+            pointer-events: none;
+            min-height: 0;
+        }
+        .status-message.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .status-message.info {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+        .status-message.error {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+        .status-message.success {
+            background: var(--success-light);
+            color: var(--success);
+        }
+        .status-message.warning {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        /* ========== 安全信息 ========== */
+        .security-badge {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            transition: border-color var(--transition);
+        }
+        .badge {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .badge .badge-icon {
+            font-size: 0.75rem;
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 480px) {
+            .container {
+                padding: 16px 12px;
+                border-radius: var(--radius-lg);
+            }
+            .title {
+                font-size: 1.1rem;
+            }
+            .logo-icon {
+                width: 34px;
+                height: 34px;
+                font-size: 17px;
+                border-radius: 10px;
+            }
+            .mode-tab {
+                padding: 8px 10px;
+                font-size: 0.82rem;
+            }
+            .btn {
+                padding: 11px 14px;
+                font-size: 0.82rem;
+                gap: 6px;
+            }
+            .button-row {
+                gap: 8px;
+            }
+            textarea {
+                min-height: 90px;
+                padding: 12px 14px;
+                font-size: 0.88rem;
+            }
+            .output-box {
+                min-height: 90px;
+                padding: 12px 14px;
+                font-size: 0.8rem;
+            }
+            .password-input input {
+                padding: 11px 40px 11px 14px;
+                font-size: 0.88rem;
+            }
+            .badge {
+                font-size: 0.65rem;
+                padding: 3px 8px;
+            }
+            .security-badge {
+                gap: 4px;
+                margin-top: 14px;
+                padding-top: 12px;
+            }
+            .status-message {
+                font-size: 0.78rem;
+                padding: 8px 12px;
+            }
+            .header {
+                margin-bottom: 18px;
+            }
+            .mode-tabs {
+                margin-bottom: 16px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                padding: 36px 36px;
+            }
+            textarea {
+                min-height: 130px;
+                font-size: 0.95rem;
+            }
+            .output-box {
+                min-height: 130px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* ========== 加载动画 ========== */
+        .btn.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        .btn.loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-left: 6px;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ========== 淡入动画 ========== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-in {
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ========== 焦点可见性 ========== */
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-icon">🔒</div>
+                <div>
+                    <h1 class="title">文本加密解密by Deepseek</h1>
+                    <h1>（没错这是全AI写的我懒得写了至于这个页面一股AI味我也懒得改了AI就AI吧）</h1>
+                    <p class="subtitle">还有你是不是翻我仓库才发现这个页面的？我草饲你草饲你草饲你草饲你</p>
+                </div>
+            </div>
+            <button class="theme-toggle" id="themeToggle" title="切换深色/浅色模式" aria-label="切换主题">
+                <span id="themeIcon">🌙</span>
+            </button>
+        </div>
+
+        <!-- 模式切换 -->
+        <div class="mode-tabs" role="tablist">
+            <button class="mode-tab active" id="tabEncrypt" role="tab" aria-selected="true" data-mode="encrypt">
+                🔐 加密
+            </button>
+            <button class="mode-tab" id="tabDecrypt" role="tab" aria-selected="false" data-mode="decrypt">
+                🔓 解密
+            </button>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="form-group">
+            <label class="form-label" id="inputLabel">
+                <span><span class="label-icon">📝</span>原文</span>
+                <span class="char-count" id="inputCharCount">0 字符</span>
+            </label>
+            <textarea id="inputText" placeholder="请输入要加密的文本..." rows="4" spellcheck="false"></textarea>
+        </div>
+
+        <!-- 密码区域 -->
+        <div class="form-group">
+            <label class="form-label">
+                <span><span class="label-icon">🔑</span>密码 <span style="font-weight:400;color:var(--text-muted);font-size:0.75em;">（可选，任意长度）</span></span>
+            </label>
+            <div class="password-input">
+                <input type="password" id="password" placeholder="不填写密码也可加密解密" autocomplete="off" spellcheck="false">
+                <button class="toggle-visibility" id="togglePassword" title="显示/隐藏密码" aria-label="切换密码可见性">
+                    👁️
+                </button>
+            </div>
+            <div class="strength-meter" id="strengthMeter">
+                <div class="strength-bar" data-index="0"></div>
+                <div class="strength-bar" data-index="1"></div>
+                <div class="strength-bar" data-index="2"></div>
+                <div class="strength-bar" data-index="3"></div>
+                <span class="strength-label" id="strengthLabel">未设置</span>
+            </div>
+        </div>
+
+        <!-- 按钮区域 -->
+        <div class="button-row">
+            <button class="btn btn-primary" id="btnMain" title="执行加密操作">
+                🔐 加密
+            </button>
+            <button class="btn btn-copy" id="btnCopy" disabled title="复制输出内容">
+                📋 复制
+            </button>
+            <button class="btn btn-secondary" id="btnClear" title="清空所有内容">
+                🗑️ 清空
+            </button>
+        </div>
+
+        <!-- 输出区域 -->
+        <div class="form-group output-group">
+            <label class="form-label" id="outputLabel">
+                <span><span class="label-icon">📤</span>密文</span>
+                <span class="char-count" id="outputCharCount">0 字符</span>
+            </label>
+            <textarea id="outputText" class="output-box" readonly placeholder="加密结果将显示在这里..." rows="4" spellcheck="false"></textarea>
+        </div>
+
+        <!-- 状态提示 -->
+        <div class="status-message" id="statusMessage" role="alert"></div>
+
+        <!-- 安全信息 -->
+        <div class="security-badge">
+            <span class="badge"><span class="badge-icon">🛡️</span> AES-256-GCM</span>
+            <span class="badge"><span class="badge-icon">🔑</span> PBKDF2 · 150,000次迭代</span>
+            <span class="badge"><span class="badge-icon">#️⃣</span> SHA-256</span>
+            <span class="badge"><span class="badge-icon">🎲</span> 随机盐值+IV</span>
+            <span class="badge"><span class="badge-icon">💻</span> 全本地计算</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ========== DOM 元素 ==========
+            const $ = (sel) => document.querySelector(sel);
+            const $$ = (sel) => document.querySelectorAll(sel);
+
+            const inputText = $('#inputText');
+            const outputText = $('#outputText');
+            const passwordInput = $('#password');
+            const btnMain = $('#btnMain');
+            const btnCopy = $('#btnCopy');
+            const btnClear = $('#btnClear');
+            const tabEncrypt = $('#tabEncrypt');
+            const tabDecrypt = $('#tabDecrypt');
+            const inputLabel = $('#inputLabel');
+            const outputLabel = $('#outputLabel');
+            const inputCharCount = $('#inputCharCount');
+            const outputCharCount = $('#outputCharCount');
+            const statusMessage = $('#statusMessage');
+            const themeToggle = $('#themeToggle');
+            const themeIcon = $('#themeIcon');
+            const togglePassword = $('#togglePassword');
+            const strengthBars = $$('.strength-bar');
+            const strengthLabel = $('#strengthLabel');
+
+            // ========== 状态 ==========
+            let currentMode = 'encrypt'; // 'encrypt' | 'decrypt'
+            let isProcessing = false;
+            let copiedTimeout = null;
+            let statusTimeout = null;
+
+            // ========== 常量 ==========
+            const PBKDF2_ITERATIONS = 150000;
+            const SALT_LENGTH = 16; // 字节
+            const IV_LENGTH = 12; // 字节，AES-GCM推荐
+            const KEY_LENGTH = 256; // 位
+            const VERSION_PREFIX = 'v1';
+
+            // ========== 工具函数 ==========
+            function bytesToBase64(bytes) {
+                let binary = '';
+                const chunkSize = 0x8000;
+                for (let i = 0; i < bytes.length; i += chunkSize) {
+                    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+                    binary += String.fromCharCode.apply(null, chunk);
+                }
+                return btoa(binary);
+            }
+
+            function base64ToBytes(base64) {
+                // 清理可能存在的空白字符
+                const clean = base64.replace(/\s/g, '');
+                try {
+                    const binary = atob(clean);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) {
+                        bytes[i] = binary.charCodeAt(i);
+                    }
+                    return bytes;
+                } catch (e) {
+                    throw new Error('无效的Base64编码');
+                }
+            }
+
+            function generateRandomBytes(length) {
+                const bytes = new Uint8Array(length);
+                crypto.getRandomValues(bytes);
+                return bytes;
+            }
+
+            function showStatus(message, type = 'info', duration = 4000) {
+                if (statusTimeout) clearTimeout(statusTimeout);
+                statusMessage.textContent = message;
+                statusMessage.className = 'status-message visible ' + type;
+                if (duration > 0) {
+                    statusTimeout = setTimeout(() => {
+                        statusMessage.className = 'status-message';
+                    }, duration);
+                }
+            }
+
+            function hideStatus() {
+                if (statusTimeout) clearTimeout(statusTimeout);
+                statusMessage.className = 'status-message';
+            }
+
+            function updateCharCounts() {
+                inputCharCount.textContent = inputText.value.length + ' 字符';
+                outputCharCount.textContent = outputText.value.length + ' 字符';
+            }
+
+            function updateButtonState() {
+                const hasInput = inputText.value.trim().length > 0;
+                const hasOutput = outputText.value.trim().length > 0;
+                btnMain.disabled = !hasInput || isProcessing;
+                btnCopy.disabled = !hasOutput || isProcessing;
+            }
+
+            function setMainButtonLoading(loading) {
+                if (loading) {
+                    btnMain.classList.add('loading');
+                    btnMain.disabled = true;
+                } else {
+                    btnMain.classList.remove('loading');
+                    updateButtonState();
+                }
+            }
+
+            function updateMainButtonLabel() {
+                if (currentMode === 'encrypt') {
+                    btnMain.innerHTML = '🔐 加密';
+                } else {
+                    btnMain.innerHTML = '🔓 解密';
+                }
+            }
+
+            function updateLabels() {
+                if (currentMode === 'encrypt') {
+                    inputLabel.innerHTML =
+                        '<span><span class="label-icon">📝</span>原文</span><span class="char-count" id="inputCharCount">' +
+                        inputText.value.length + ' 字符</span>';
+                    outputLabel.innerHTML =
+                        '<span><span class="label-icon">📤</span>密文</span><span class="char-count" id="outputCharCount">' +
+                        outputText.value.length + ' 字符</span>';
+                    inputText.placeholder = '请输入要加密的文本...';
+                    outputText.placeholder = '加密结果将显示在这里...';
+                } else {
+                    inputLabel.innerHTML =
+                        '<span><span class="label-icon">📥</span>密文</span><span class="char-count" id="inputCharCount">' +
+                        inputText.value.length + ' 字符</span>';
+                    outputLabel.innerHTML =
+                        '<span><span class="label-icon">📄</span>原文</span><span class="char-count" id="outputCharCount">' +
+                        outputText.value.length + ' 字符</span>';
+                    inputText.placeholder = '请输入要解密的密文...';
+                    outputText.placeholder = '解密结果将显示在这里...';
+                }
+                // 重新获取char count元素引用
+                updateCharCounts();
+            }
+
+            function getPassword() {
+                return passwordInput.value;
+            }
+
+            function updatePasswordStrength() {
+                const pwd = getPassword();
+                const len = pwd.length;
+                let level = 0; // 0=无, 1=弱, 2=中, 3=强
+                let label = '未设置';
+                let filledCount = 0;
+
+                if (len === 0) {
+                    level = 0;
+                    label = '未设置';
+                    filledCount = 0;
+                } else if (len < 4) {
+                    level = 1;
+                    label = '弱';
+                    filledCount = 1;
+                } else if (len < 8) {
+                    level = 2;
+                    label = '中等';
+                    filledCount = 2;
+                } else if (len < 13) {
+                    level = 3;
+                    label = '强';
+                    filledCount = 3;
+                } else {
+                    level = 4;
+                    label = '非常强';
+                    filledCount = 4;
+                }
+
+                strengthBars.forEach((bar, index) => {
+                    bar.className = 'strength-bar';
+                    if (index < filledCount) {
+                        bar.classList.add('filled');
+                        if (level === 1) {
+                            bar.style.background = 'var(--danger)';
+                        } else if (level === 2) {
+                            bar.style.background = 'var(--warning)';
+                        } else if (level >= 3) {
+                            bar.style.background = 'var(--success)';
+                        }
+                    } else {
+                        bar.style.background = 'var(--border)';
+                    }
+                });
+                strengthLabel.textContent = label;
+                if (level === 0) strengthLabel.style.color = 'var(--text-muted)';
+                else if (level === 1) strengthLabel.style.color = 'var(--danger)';
+                else if (level === 2) strengthLabel.style.color = 'var(--warning)';
+                else strengthLabel.style.color = 'var(--success)';
+            }
+
+            // ========== 主题管理 ==========
+            function getPreferredTheme() {
+                const stored = localStorage.getItem('theme');
+                if (stored === 'light' || stored === 'dark') return stored;
+                const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                return darkQuery.matches ? 'dark' : 'light';
+            }
+
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeIcon.textContent = '☀️';
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    themeIcon.textContent = '🌙';
+                }
+                localStorage.setItem('theme', theme);
+            }
+
+            function toggleTheme() {
+                const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+                const next = current === 'dark' ? 'light' : 'dark';
+                applyTheme(next);
+            }
+
+            // ========== 密码可见性 ==========
+            function togglePasswordVisibility() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    togglePassword.textContent = '🙈';
+                } else {
+                    passwordInput.type = 'password';
+                    togglePassword.textContent = '👁️';
+                }
+            }
+
+            // ========== 核心加密/解密 ==========
+            async function deriveKey(password, saltBytes) {
+                const enc = new TextEncoder();
+                const keyMaterial = await crypto.subtle.importKey(
+                    'raw',
+                    enc.encode(password),
+                    'PBKDF2',
+                    false,
+                    ['deriveKey']
+                );
+                return await crypto.subtle.deriveKey({
+                        name: 'PBKDF2',
+                        salt: saltBytes,
+                        iterations: PBKDF2_ITERATIONS,
+                        hash: 'SHA-256'
+                    },
+                    keyMaterial, { name: 'AES-GCM', length: KEY_LENGTH },
+                    false,
+                    ['encrypt', 'decrypt']
+                );
+            }
+
+            async function encryptText(plaintext, password) {
+                const enc = new TextEncoder();
+                const plaintextBytes = enc.encode(plaintext);
+                const saltBytes = generateRandomBytes(SALT_LENGTH);
+                const ivBytes = generateRandomBytes(IV_LENGTH);
+                const key = await deriveKey(password, saltBytes);
+                const ciphertextBytes = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: ivBytes },
+                    key,
+                    plaintextBytes
+                );
+                const ciphertextArray = new Uint8Array(ciphertextBytes);
+                const saltB64 = bytesToBase64(saltBytes);
+                const ivB64 = bytesToBase64(ivBytes);
+                const dataB64 = bytesToBase64(ciphertextArray);
+                // 格式: v1.<salt>.<iv>.<ciphertext>
+                return `${VERSION_PREFIX}.${saltB64}.${ivB64}.${dataB64}`;
+            }
+
+            async function decryptText(ciphertext, password) {
+                // 解析密文格式
+                const parts = ciphertext.trim().split('.');
+                if (parts.length !== 4) {
+                    throw new Error('密文格式不正确');
+                }
+                if (parts[0] !== VERSION_PREFIX) {
+                    throw new Error('不支持的密文版本: ' + parts[0]);
+                }
+                let saltBytes, ivBytes, dataBytes;
+                try {
+                    saltBytes = base64ToBytes(parts[1]);
+                    ivBytes = base64ToBytes(parts[2]);
+                    dataBytes = base64ToBytes(parts[3]);
+                } catch (e) {
+                    throw new Error('密文格式不正确: ' + e.message);
+                }
+                if (saltBytes.length !== SALT_LENGTH) {
+                    throw new Error('盐值长度不正确');
+                }
+                if (ivBytes.length !== IV_LENGTH) {
+                    throw new Error('IV长度不正确');
+                }
+                const key = await deriveKey(password, saltBytes);
+                try {
+                    const plaintextBytes = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ivBytes },
+                        key,
+                        dataBytes
+                    );
+                    const dec = new TextDecoder();
+                    return dec.decode(new Uint8Array(plaintextBytes));
+                } catch (e) {
+                    throw new Error('解密失败：密码错误或密文已损坏');
+                }
+            }
+
+            // ========== 复制功能 ==========
+            async function copyToClipboard(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        return true;
+                    } catch (e) {
+                        // 继续尝试fallback
+                    }
+                }
+                // Fallback
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.top = '0';
+                    textarea.style.left = '0';
+                    textarea.style.opacity = '0';
+                    textarea.style.pointerEvents = 'none';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    textarea.setSelectionRange(0, text.length);
+                    const success = document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    return success;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // ========== 主操作 ==========
+            async function handleMainAction() {
+                if (isProcessing) return;
+                const inputValue = inputText.value.trim();
+                const password = getPassword();
+
+                if (!inputValue) {
+                    showStatus('请输入' + (currentMode === 'encrypt' ? '要加密的文本' : '要解密的密文'), 'warning');
+                    inputText.focus();
+                    return;
+                }
+
+                // 检查Web Crypto API可用性
+                if (!crypto.subtle) {
+                    showStatus('当前环境不支持Web Crypto API，请使用HTTPS或现代浏览器', 'error', 6000);
+                    return;
+                }
+
+                isProcessing = true;
+                setMainButtonLoading(true);
+                hideStatus();
+                outputText.value = '';
+                outputText.className = 'output-box';
+                updateCharCounts();
+                updateButtonState();
+
+                try {
+                    let result;
+                    if (currentMode === 'encrypt') {
+                        result = await encryptText(inputValue, password);
+                        if (password === '') {
+                            showStatus('✅ 加密成功（未使用密码，安全性较低）', 'warning', 5000);
+                        } else {
+                            showStatus('✅ 加密成功', 'success', 3000);
+                        }
+                    } else {
+                        result = await decryptText(inputValue, password);
+                        if (password === '') {
+                            showStatus('✅ 解密成功', 'success', 3000);
+                        } else {
+                            showStatus('✅ 解密成功', 'success', 3000);
+                        }
+                    }
+                    outputText.value = result;
+                    outputText.className = 'output-box has-content';
+                    outputText.classList.add('fade-in');
+                    updateCharCounts();
+                    updateButtonState();
+                } catch (error) {
+                    outputText.value = '';
+                    outputText.className = 'output-box has-error';
+                    showStatus('❌ ' + error.message, 'error', 6000);
+                    updateCharCounts();
+                    updateButtonState();
+                } finally {
+                    isProcessing = false;
+                    setMainButtonLoading(false);
+                    updateButtonState();
+                }
+            }
+
+            // ========== 清除功能 ==========
+            function handleClear() {
+                inputText.value = '';
+                outputText.value = '';
+                passwordInput.value = '';
+                outputText.className = 'output-box';
+                hideStatus();
+                updateCharCounts();
+                updateButtonState();
+                updatePasswordStrength();
+                if (currentMode === 'encrypt') {
+                    inputText.placeholder = '请输入要加密的文本...';
+                } else {
+                    inputText.placeholder = '请输入要解密的密文...';
+                }
+                inputText.focus();
+            }
+
+            // ========== 模式切换 ==========
+            function switchMode(mode) {
+                if (mode === currentMode) return;
+                currentMode = mode;
+                if (mode === 'encrypt') {
+                    tabEncrypt.classList.add('active');
+                    tabDecrypt.classList.remove('active');
+                } else {
+                    tabDecrypt.classList.add('active');
+                    tabEncrypt.classList.remove('active');
+                }
+                updateMainButtonLabel();
+                updateLabels();
+                outputText.value = '';
+                outputText.className = 'output-box';
+                hideStatus();
+                updateCharCounts();
+                updateButtonState();
+                updatePasswordStrength();
+            }
+
+            // ========== 事件监听 ==========
+            tabEncrypt.addEventListener('click', () => switchMode('encrypt'));
+            tabDecrypt.addEventListener('click', () => switchMode('decrypt'));
+            btnMain.addEventListener('click', handleMainAction);
+            btnClear.addEventListener('click', handleClear);
+            themeToggle.addEventListener('click', toggleTheme);
+            togglePassword.addEventListener('click', togglePasswordVisibility);
+
+            btnCopy.addEventListener('click', async () => {
+                const text = outputText.value;
+                if (!text) return;
+                const success = await copyToClipboard(text);
+                if (success) {
+                    btnCopy.classList.add('copied');
+                    const originalText = btnCopy.innerHTML;
+                    btnCopy.innerHTML = '✅ 已复制';
+                    showStatus('📋 已复制到剪贴板', 'success', 2000);
+                    if (copiedTimeout) clearTimeout(copiedTimeout);
+                    copiedTimeout = setTimeout(() => {
+                        btnCopy.classList.remove('copied');
+                        btnCopy.innerHTML = originalText;
+                    }, 2000);
+                } else {
+                    showStatus('❌ 复制失败，请手动选择输出内容', 'error', 3000);
+                }
+            });
+
+            // 输入框实时更新
+            inputText.addEventListener('input', () => {
+                updateCharCounts();
+                updateButtonState();
+                if (outputText.value) {
+                    // 如果用户修改了输入，清空输出
+                    outputText.value = '';
+                    outputText.className = 'output-box';
+                    updateCharCounts();
+                    updateButtonState();
+                }
+                hideStatus();
+            });
+
+            passwordInput.addEventListener('input', () => {
+                updatePasswordStrength();
+                // 密码改变时不清空输出，但更新按钮状态
+                updateButtonState();
+            });
+
+            outputText.addEventListener('input', () => {
+                updateCharCounts();
+                updateButtonState();
+            });
+
+            // 键盘快捷键
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    handleMainAction();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    togglePasswordVisibility();
+                }
+            });
+
+            // 系统主题变化监听
+            const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            darkQuery.addEventListener('change', (e) => {
+                const stored = localStorage.getItem('theme');
+                if (!stored) {
+                    applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+
+            // ========== 初始化 ==========
+            function init() {
+                // 应用主题
+                const storedTheme = localStorage.getItem('theme');
+                if (storedTheme === 'light' || storedTheme === 'dark') {
+                    applyTheme(storedTheme);
+                } else {
+                    const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                    applyTheme(darkQuery.matches ? 'dark' : 'light');
+                }
+
+                // 初始化模式
+                currentMode = 'encrypt';
+                updateMainButtonLabel();
+                updateLabels();
+                updatePasswordStrength();
+                updateCharCounts();
+                updateButtonState();
+
+                // 检查Web Crypto API
+                if (!crypto.subtle) {
+                    showStatus('⚠️ 当前环境不支持Web Crypto API，请使用HTTPS或现代浏览器', 'warning', 8000);
+                    btnMain.disabled = true;
+                }
+            }
+
+            // 启动
+            init();
+
+            // 页面加载动画
+            document.querySelector('.container').classList.add('fade-in');
+        })();
+    </script>
+</body>
+</html>
