@@ -62,37 +62,10 @@ h1 .sub { font-size: 13px; font-weight: 400; color: var(--fg-muted); margin-left
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
-.topbar-inner { padding: 6px 12px 2px; }
-.topbar-inner h1 { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
-.topbar-inner h1 .sub { margin-left: 6px; }
-
-.toolbar {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
-  margin-bottom: 2px;
-}
-.toolbar .group { padding: 3px 0; flex-wrap: wrap; }
-.toolbar .group + .group {
-  border-top: none;
-  border-left: 1px solid var(--border);
-  padding-left: 12px; margin-left: 6px;
-}
-.toolbar .group-label { min-width: 0; font-size: 11px; }
-
-.topbar .card {
-  border: none; background: transparent;
-  padding: 0; margin: 0 0 2px;
-}
-.topbar .options-row { gap: 14px; padding: 2px 0 4px; }
-.topbar .options-subrow { gap: 14px; margin-top: 4px; padding-top: 4px; }
-.topbar .btn { padding: 4px 9px; font-size: 12px; }
-.topbar .seg-btn { min-width: 40px; }
-.topbar select, .topbar input[type="text"] { padding: 4px 7px; font-size: 12px; }
-.topbar .swatch { width: 17px; height: 17px; }
-.topbar input[type="color"] { width: 28px; height: 24px; }
-.topbar .param-input { min-width: 120px; }
-.topbar .hex { width: 72px; }
-.topbar .opt { gap: 4px; }
-.topbar .inline-label { font-size: 11px; }
+.topbar-inner { max-width: 900px; margin: 0 auto; padding: 12px 16px 2px; }
+.topbar-inner h1 { font-size: 16px; margin: 0 0 8px; }
+.topbar-inner .card { margin-bottom: 10px; }
+.topbar-inner .group { padding: 6px 0; }
 
 .card {
   border: 1px solid var(--border);
@@ -259,9 +232,10 @@ input[type="color"] {
 <body>
 <div class="topbar">
   <div class="topbar-inner">
+    <a href="../">返回主页</a>
     <h1>Minecraft 文本组件生成器<span class="sub">Text Component Generator</span></h1>
 
-    <section class="toolbar" aria-label="工具栏">
+    <section class="card" aria-label="工具栏">
     <div class="group">
       <span class="group-label">样式</span>
       <button type="button" class="btn seg-btn" data-style="bold" title="加粗">加粗</button>
@@ -321,9 +295,6 @@ input[type="color"] {
         <input type="checkbox" id="signMode">
         <label for="signMode">生成告示牌</label>
       </span>
-      <button type="button" class="btn" id="exportBtn" title="将当前内容导出为 JSON 文件">导出</button>
-      <button type="button" class="btn" id="importBtn" title="从 JSON 文件导入内容">导入</button>
-      <input type="file" id="fileInput" accept=".json,application/json" hidden>
       <button type="button" class="btn primary" id="generateBtn">生成并复制</button>
     </div>
     <div class="options-subrow" id="signOptions">
@@ -360,7 +331,7 @@ input[type="color"] {
   <p class="foot">
     用鼠标选中文字后，可为选中部分应用样式、颜色或点击事件；没有选中文字时，样式与颜色将应用到光标位置及之后输入的内容。<br>
     含点击事件的文字会在编辑器中以不断变化的背景色高亮显示。<br>
-    点击「生成并复制」即可将结果直接复制到剪贴板；「导出」可把当前内容保存为 JSON 文件，之后「导入」即可继续编辑，关闭网页也不丢失。
+    点击「生成并复制」即可将结果直接复制到剪贴板。
   </p>
 </main>
 <div class="toast" id="toast" role="status"></div>
@@ -419,9 +390,6 @@ var input = document.getElementById('input');
 var preview = document.getElementById('preview');
 var linenums = document.getElementById('linenums');
 var generateBtn = document.getElementById('generateBtn');
-var exportBtn = document.getElementById('exportBtn');
-var importBtn = document.getElementById('importBtn');
-var fileInput = document.getElementById('fileInput');
 var dialogMode = document.getElementById('dialogMode');
 var dialogHint = document.getElementById('dialogHint');
 var targetSelector = document.getElementById('targetSelector');
@@ -962,85 +930,6 @@ function fallbackCopy(text) {
   } catch (e) { return false; }
 }
 
-// ---- 导出 / 导入 ----
-function buildDocument() {
-  return {
-    version: 1,
-    type: 'mctexteditor-document',
-    segments: segments.map(function (s) {
-      return {
-        text: s.text,
-        color: s.color,
-        bold: s.bold,
-        italic: s.italic,
-        underline: s.underline,
-        strikethrough: s.strikethrough,
-        obfuscated: s.obfuscated,
-        click: s.click ? { action: s.click.action, value: s.click.value } : null
-      };
-    })
-  };
-}
-function exportDocument() {
-  var blob = new Blob([JSON.stringify(buildDocument(), null, 2)], { type: 'application/json' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'mc-text-document.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-  showToast('已导出');
-}
-function loadDocument(doc) {
-  if (!doc || !Array.isArray(doc.segments)) return false;
-  var segs = [];
-  for (var i = 0; i < doc.segments.length; i++) {
-    var s = doc.segments[i];
-    if (!s || typeof s !== 'object' || typeof s.text !== 'string') continue;
-    if (s.text === '') continue;
-    var ns = blankSegment();
-    ns.text = s.text;
-    ns.color = normalizeHex(s.color) || DEFAULT_COLOR;
-    ns.bold = !!s.bold;
-    ns.italic = !!s.italic;
-    ns.underline = !!s.underline;
-    ns.strikethrough = !!s.strikethrough;
-    ns.obfuscated = !!s.obfuscated;
-    if (s.click && typeof s.click === 'object') {
-      var action = CLICK_ACTIONS[s.click.action] ? s.click.action : 'run_command';
-      ns.click = { action: action, value: String(s.click.value === undefined ? '' : s.click.value) };
-    }
-    segs.push(ns);
-  }
-  if (segs.length === 0) return false;
-  segments = segs;
-  mergeAdjacent();
-  typingStyle = cloneStyle(segments[segments.length - 1]);
-  lastCaretPos = 0;
-  input.value = fullText();
-  input.selectionStart = 0;
-  input.selectionEnd = 0;
-  commit();
-  return true;
-}
-function importDocument() {
-  var file = fileInput.files && fileInput.files[0];
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function (e) {
-    try {
-      var doc = JSON.parse(e.target.result);
-      if (loadDocument(doc)) showToast('已导入');
-      else showToast('文件格式不正确');
-    } catch (err) {
-      showToast('文件格式不正确');
-    }
-  };
-  reader.readAsText(file);
-}
-
 // ---- toast ----
 function showToast(msg) {
   toast.textContent = msg;
@@ -1114,12 +1003,6 @@ generateBtn.addEventListener('click', function () {
   copyText(out).then(function (ok) {
     showToast(ok ? '已生成并复制' : '已生成，但复制失败，请手动复制');
   });
-});
-exportBtn.addEventListener('click', exportDocument);
-importBtn.addEventListener('click', function () { fileInput.click(); });
-fileInput.addEventListener('change', function () {
-  importDocument();
-  fileInput.value = '';
 });
 
 // ---- theme ----
