@@ -14,7 +14,7 @@
 
 - 对于index.html和404.html，是我纯手工编写的。
 
-- 对于articles文件夹里的文章，我使用了由DeepSeek（Claude Code）编写的“markdown转html工具“，这样我只需要以markdown形式写文章，再运行这个程序，就可以直接转换为html。此程序也存放在仓库的articles文件夹里。
+- 对于articles文件夹里的文章，我使用了由DeepSeek（使用Claude Code）编写的“markdown转html工具“，这样我只需要以markdown形式写文章，再运行这个程序，就可以直接转换为html。此程序也存放在仓库的articles文件夹里。
 
 - 对于css样式，由DeepSeek编写。这个样式非常简洁，但是可能字体缩放不是很合适，请见谅。
 
