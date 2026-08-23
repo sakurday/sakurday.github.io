@@ -40,11 +40,74 @@
 		<p>我, 也就是Sakurday, 只是一个社恐大学生. 平时喜欢折腾电脑, 玩玩mc和音游, 然后...没别的了.</p>
 		<hr>
 
-		<h2>之前的网站去哪了?</h2>
-		<p>我懒得维护了干脆写一个新的了</p>
-		<hr>
-
 		<h2><u><font color="#00b050"><a href="./articles/shit">碎碎念</a></font></u></h2>
+		<p>截止<span id="mood-date">棍母(其实是时间获取失败了)</span>，我的心情值：<span id="mood-value">加载中...</span>/100</p>
+		<p></p>
+		<hr>
+		<p>已经浏览到底了！</p>
+
+		<script>
+		// 这是AI写的！！！
+		// 这是AI写的！！！
+		// 这是AI写的！！！
+		// 这是AI写的！！！
+		// 这是AI写的！！！
+		async function getMoodAndTime() {
+		  try {
+		    // 并行获取 README 内容和 commit 信息
+		    const [readmeResponse, commitResponse] = await Promise.all([
+		      fetch('https://cdn.jsdelivr.net/gh/sakurday/mood@main/README.md'),
+		      fetch('https://api.github.com/repos/sakurday/mood/commits?per_page=1')
+		    ]);
+		    
+		    // 处理 README，获取心情值
+		    const readmeData = await readmeResponse.text();
+		    const codeBlocks = readmeData.match(/```[\s\S]*?```/g);
+		    let moodValue = null;
+		    
+		    if (codeBlocks) {
+		      for (let block of codeBlocks) {
+		        const content = block.replace(/```/g, '');
+		        const moodMatch = content.match(/mood\s*:\s*"(\d+)"/);
+		        if (moodMatch) {
+		          moodValue = moodMatch[1];
+		          document.getElementById('mood-value').textContent = moodValue;
+		          break;
+		        }
+		      }
+		    }
+		    
+		    if (!moodValue) {
+		      document.getElementById('mood-value').textContent = '--';
+		    }
+		    
+		    // 处理 commit 信息，获取时间
+		    const commitData = await commitResponse.json();
+		    if (commitData && commitData.length > 0) {
+		      const commitDate = new Date(commitData[0].commit.committer.date);
+		      
+		      // 格式化为：xx月xx日xx:xx
+		      const month = commitDate.getMonth() + 1; // 月份从0开始
+		      const day = commitDate.getDate();
+		      const hours = String(commitDate.getHours()).padStart(2, '0');
+		      const minutes = String(commitDate.getMinutes()).padStart(2, '0');
+		      
+		      const dateStr = `${month}月${day}日${hours}:${minutes}`;
+		      document.getElementById('mood-date').textContent = dateStr;
+		    } else {
+		      document.getElementById('mood-date').textContent = '--月--日--:--';
+		    }
+		    
+		  } catch (error) {
+		    console.error('获取数据失败:', error);
+		    document.getElementById('mood-value').textContent = '--';
+		    document.getElementById('mood-date').textContent = '--月--日--:--';
+		  }
+		}
+
+		// 页面加载时获取
+		getMoodAndTime();
+		</script>
 
 	</body>
 
