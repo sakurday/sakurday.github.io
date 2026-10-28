@@ -6,6 +6,14 @@
 
 你可能会发现有一些看起来被加密的内容。我的有一些碎碎念因某些原因只想给特定的人看。你可以尝试暴力破解，但是破解难度会随着内容的隐私性而呈指数级上升（越是隐私的内容，密钥越复杂）。如果你是我想展示此内容的人之一，你应该会很容易就弄到密码，而不是暴力破解。
 
+## 2026-10-28
+
+[TIP: THE ONLINE ONE](https://minecraft.wiki/w/UUID)
+
+```
+Ac88GLhb+Yfu/toyIww69TevYkmhgmzUDCIibv2lu9oUBar7c5s9sCTcpZmiK6SPjcSxKrd9IvhcE/IUB5so1J0ozxAvllHisNVFs3ER99zO6X1R9vNoThFOQORAXqMjB76SA7VD4XdFrdd9TgFhxknTKCU8Moq0X5zWs4rJowIxR6v+1JMhr5ypAjckfHHvTc5VMpgCDyunWhAofb9z14CrYZI+cgsUZTLZaS2TtX230QgHNt8V1WfiwCcPL4d1RJ9Hgcw2EIo6w5zu7B9g7WARpGBZ/VA2di32IDZQOnaMSaDham+BKuXqLUfMLVJLyWhJEJNe+ss87J/NrMVAsCqBSMpBw5feeDp4GkHOLgsUVJEmis4fJ/ImpNTboL4SbcA8ObeutntUlE0YePa5jJ+8UaI7jq/myUPiE8vovRNRLEc3anugOvumY4cqbM2LWOVqLQIdS4f+DBKObsFOvX24BfBkF685E5nAwbQpKvZZmO8o1B9vZ9gK614eqmwDBh7I1aUrjPFQj75XnVgVNtLibmiN0q/m9bsHkJNK6WImzifS+SvCAsgFatbIuGOjgl9O
+```
+
 ## 2026-10-23
 
 ```
