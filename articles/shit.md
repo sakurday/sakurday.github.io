@@ -6,13 +6,25 @@
 
 你可能会发现有一些看起来被加密的内容。我的有一些碎碎念因某些原因只想给特定的人看。你可以尝试暴力破解，但是破解难度会随着内容的隐私性而呈指数级上升（越是隐私的内容，密钥越复杂）。如果你是我想展示此内容的人之一，你应该会很容易就弄到密码，而不是暴力破解。
 
-## 2026-10-28
+## 2026-11-01
 
-[TIP: THE ONLINE ONE](https://minecraft.wiki/w/UUID)
+10月初办了张银行卡，尝试了一下 ChatGPT 会员，其实之前我觉得 ChatGPT 虽然智商比 DeepSeek 高一点点，但是真干起编程的活来好像也差不多。
 
-```
-Ac88GLhb+Yfu/toyIww69TevYkmhgmzUDCIibv2lu9oUBar7c5s9sCTcpZmiK6SPjcSxKrd9IvhcE/IUB5so1J0ozxAvllHisNVFs3ER99zO6X1R9vNoThFOQORAXqMjB76SA7VD4XdFrdd9TgFhxknTKCU8Moq0X5zWs4rJowIxR6v+1JMhr5ypAjckfHHvTc5VMpgCDyunWhAofb9z14CrYZI+cgsUZTLZaS2TtX230QgHNt8V1WfiwCcPL4d1RJ9Hgcw2EIo6w5zu7B9g7WARpGBZ/VA2di32IDZQOnaMSaDham+BKuXqLUfMLVJLyWhJEJNe+ss87J/NrMVAsCqBSMpBw5feeDp4GkHOLgsUVJEmis4fJ/ImpNTboL4SbcA8ObeutntUlE0YePa5jJ+8UaI7jq/myUPiE8vovRNRLEc3anugOvumY4cqbM2LWOVqLQIdS4f+DBKObsFOvX24BfBkF685E5nAwbQpKvZZmO8o1B9vZ9gK614eqmwDBh7I1aUrjPFQj75XnVgVNtLibmiN0q/m9bsHkJNK6WImzifS+SvCAsgFatbIuGOjgl9O
-```
+直到我把大部分杂活交给他，我发现 ChatGPT 厉害在哪了，并且决定以后都要给他续费
+
+他不是单纯的智商高，他有 Chat，Work 和 Codex 三个模式
+
+Codex 模式挺一般的，感觉和 DeepSeek Harness 没区别
+
+Work 模式真的厉害，各种 word 文档，PPT 都能做，而且无需任何插件，速度快，格式还非常完美。有时候老师会给 word 模板，他也能完美遵循模板输出成品 word 文档
+
+而最让我感到牛逼的莫过于今天用他的 Chat 模式，让他把我当啥子给我讲解模电，他讲的真的通俗易懂，我这种啥子竟然看懂了！而且他的 Chat 模式本身可以画图，所以他的讲解都是带图的！而且还支持选择框，每次讲解完他都会给几道题目！选完立马就能知道对不对！
+
+而其他 AI，包括 DeepSeek, 豆包, 千问, 包括大名鼎鼎的 Claude, 都不支持这样！
+
+![](./media/shit_gpt_1.png)
+
+不得不续费了
 
 ## 2026-10-23
 
