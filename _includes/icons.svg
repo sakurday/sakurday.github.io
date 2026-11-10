@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="icon-library" width="0" height="0" aria-hidden="true">
+  <symbol id="prism" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 1.8c1.55 5.87 4.32 8.64 10.2 10.2-5.88 1.55-8.65 4.32-10.2 10.2C10.44 16.32 7.67 13.55 1.8 12 7.67 10.44 10.44 7.67 12 1.8Z"/>
+  </symbol>
+  <symbol id="moon" viewBox="0 0 24 24">
+    <path d="M20.6 15.1a8.8 8.8 0 0 1-11.7-11.7 8.8 8.8 0 1 0 11.7 11.7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="sun" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4m0-14.2-1.4 1.4M6.3 17.7l-1.4 1.4"/>
+    </g>
+  </symbol>
+  <symbol id="arrow-right" viewBox="0 0 24 24">
+    <path d="M4.5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="arrow-left" viewBox="0 0 24 24">
+    <use href="#arrow-right" transform="translate(24 0) scale(-1 1)"/>
+  </symbol>
+  <symbol id="design" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round">
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="12" cy="12" r="4"/><path d="M12 3.5v4.5m8.5 4h-4.5m-4 4v4.5M8 12H3.5"/>
+    </g>
+  </symbol>
+  <symbol id="code" viewBox="0 0 24 24">
+    <path d="m8 7-5 5 5 5m8-10 5 5-5 5m-2.5-13-3 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="note" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 3.5h7.5l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5Z"/><path d="M14 3.5V9h5M9 13h6m-6 3.5h6"/>
+    </g>
+  </symbol>
+</svg>

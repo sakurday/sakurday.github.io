@@ -1,0 +1,23 @@
+<svg class="hero-art" viewBox="0 0 424 348" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <g fill="none" class="orbit-lines" transform="rotate(-23 212 174)">
+    <ellipse cx="212" cy="174" rx="188" ry="73"/>
+    <ellipse cx="212" cy="174" rx="166" ry="102"/>
+    <ellipse cx="212" cy="174" rx="144" ry="133"/>
+  </g>
+  <circle class="orbit-disc" cx="212" cy="174" r="119"/>
+  <g fill="none" class="orbit-lines orbit-inner">
+    <path d="M212 55v238M93 174h238"/>
+    <circle cx="212" cy="174" r="94"/>
+  </g>
+  <path class="prism-shadow" d="M216 91c10 50 38 79 89 89-51 10-79 39-89 89-10-50-39-79-89-89 50-10 79-39 89-89Z"/>
+  <path class="prism-base" d="M212 78c11 54 41 85 96 96-55 11-85 42-96 96-11-54-42-85-96-96 54-11 85-42 96-96Z"/>
+  <path class="prism-light" d="M212 78c11 54 41 85 96 96h-96Z"/>
+  <path class="prism-mid" d="M212 270c-11-54-42-85-96-96h96Z"/>
+  <path class="prism-bright" d="M212 78v96h-96c54-11 85-42 96-96Z"/>
+  <circle class="orbit-dot" cx="212" cy="174" r="4.5"/>
+  <circle class="satellite-main" cx="337" cy="78" r="15"/>
+  <circle class="satellite-warm" cx="73" cy="223" r="10"/>
+  <circle class="satellite-small" cx="344" cy="250" r="5"/>
+  <circle class="satellite-small" cx="107" cy="89" r="3"/>
+  <path class="art-sparkle" d="M83 125c2 9 6 13 15 15-9 2-13 6-15 15-2-9-6-13-15-15 9-2 13-6 15-15Zm260 66c1.6 6.4 4.6 9.4 11 11-6.4 1.6-9.4 4.6-11 11-1.6-6.4-4.6-9.4-11-11 6.4-1.6 9.4-4.6 11-11Z"/>
+</svg>

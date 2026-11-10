@@ -1,0 +1,21 @@
+title: 标题
+description: 首页大卡片描述
+lang: zh-CN
+timezone: Asia/Singapore
+markdown: kramdown
+permalink: /posts/:year/:month/:day/:title/
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - run.bat
+  - node_modules
+  - package.json
+  - package-lock.json
+  - scripts

@@ -1,0 +1,17 @@
+---
+layout: default
+---
+{% assign all_posts_url = '/' | relative_url | append: '#articles' %}
+{% include material-link.html class="back-link" href=all_posts_url label="全部文章" icon="arrow-left" %}
+<article class="reading">
+  <header class="reading-header">
+    <div class="metadata">
+      {% if page.topic %}<span class="topic-label">{{ page.topic | escape }}</span>{% endif %}
+      <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y.%m.%d" }}</time>
+    </div>
+    <h1>{{ page.title | escape }}</h1>
+    {% if page.description %}<p>{{ page.description | escape }}</p>{% endif %}
+    <md-divider></md-divider>
+  </header>
+  <div class="prose">{{ content }}</div>
+</article>

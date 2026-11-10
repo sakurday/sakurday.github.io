@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft 文本组件生成器</title>
+<style>
+* { box-sizing: border-box; }
+
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-soft: #f4f5f6;
+  --fg: #1d2024;
+  --fg-muted: #62686f;
+  --border: #d9dde1;
+  --accent: #2f6fed;
+  --accent-fg: #ffffff;
+  --active: #d7e5ff;
+  --btn-bg: #edf0f2;
+  --btn-hover: #e1e5e9;
+  --editor-bg: #ffffff;
+  --caret: #1d2024;
+  --placeholder: #9aa1a8;
+  --code-bg: #f4f5f6;
+  --toast-bg: #23262a;
+  --toast-fg: #f2f3f4;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #191b1e;
+  --bg-soft: #23262b;
+  --fg: #e7e9ec;
+  --fg-muted: #9aa1a8;
+  --border: #3a3f46;
+  --accent: #6c95f0;
+  --accent-fg: #0f1420;
+  --active: #2b3a55;
+  --btn-bg: #2a2e34;
+  --btn-hover: #363b42;
+  --editor-bg: #15171a;
+  --caret: #e7e9ec;
+  --placeholder: #5f666e;
+  --code-bg: #202327;
+  --toast-bg: #e7e9ec;
+  --toast-fg: #191b1e;
+}
+
+html, body { margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+}
+main { max-width: 900px; margin: 0 auto; padding: 20px 16px 72px; }
+h1 { font-size: 19px; font-weight: 600; margin: 0 0 18px; }
+h1 .sub { font-size: 13px; font-weight: 400; color: var(--fg-muted); margin-left: 8px; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-inner { max-width: 900px; margin: 0 auto; padding: 12px 16px 2px; }
+.topbar-inner h1 { font-size: 16px; margin: 0 0 8px; }
+.topbar-inner .card { margin-bottom: 10px; }
+.topbar-inner .group { padding: 6px 0; }
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  padding: 6px 14px;
+  margin-bottom: 14px;
+}
+
+.group {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 0;
+}
+.group + .group { border-top: 1px solid var(--border); }
+.group-label { flex: 0 0 auto; font-size: 12px; color: var(--fg-muted); min-width: 56px; }
+
+button { font-family: inherit; }
+.btn {
+  background: var(--btn-bg); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 6px 12px; font-size: 13px; cursor: pointer;
+}
+.btn:hover { background: var(--btn-hover); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn.primary:hover { background: var(--accent); filter: brightness(1.1); }
+.btn.active { background: var(--active); border-color: var(--accent); color: var(--accent); }
+.btn.active:hover { background: var(--active); }
+.seg-btn { min-width: 54px; }
+
+.swatches { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.swatch {
+  width: 20px; height: 20px; border-radius: 5px; padding: 0; cursor: pointer;
+  border: 1px solid var(--border);
+}
+.swatch:hover { transform: scale(1.08); }
+.swatch.active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+
+input[type="text"], select {
+  padding: 6px 8px; font-size: 13px;
+  border: 1px solid var(--border); border-radius: 7px;
+  background: var(--bg); color: var(--fg);
+}
+.hex { width: 88px; font-family: ui-monospace, Consolas, "Courier New", monospace; text-transform: uppercase; }
+input[type="color"] {
+  width: 34px; height: 30px; padding: 2px;
+  border: 1px solid var(--border); border-radius: 7px; background: var(--bg); cursor: pointer;
+}
+.param-input { min-width: 190px; flex: 1; }
+.param-label { font-size: 12px; color: var(--fg-muted); font-family: ui-monospace, Consolas, monospace; }
+
+.options-card { padding: 12px 14px; }
+.options-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.options-subrow {
+  display: none;
+  align-items: center; gap: 22px; flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  margin-top: 12px; padding-top: 12px;
+}
+.options-subrow.show { display: flex; }
+.opt { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; margin: 0; }
+.opt input[type="radio"], .opt input[type="checkbox"] { accent-color: var(--accent); margin: 0; }
+.opt select { padding: 5px 8px; }
+#generateBtn { margin-left: auto; }
+.inline-label { font-size: 12px; color: var(--fg-muted); }
+
+.hint {
+  font-size: 13px; color: var(--accent);
+  background: var(--active);
+  border-radius: 7px; padding: 7px 11px; margin-bottom: 10px;
+}
+.hidden { display: none; }
+
+.editor { display: flex; align-items: stretch; border: 1px solid var(--border); border-radius: 10px; min-height: 480px; background: var(--editor-bg); overflow: hidden; }
+.editor:focus-within { border-color: var(--accent); }
+.editor-body { position: relative; flex: 1; min-width: 0; }
+.linenums {
+  flex: 0 0 auto;
+  min-width: 2.4em;
+  padding: 12px 10px 12px 12px;
+  font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+  font-size: 14px; line-height: 1.6;
+  white-space: pre;
+  text-align: right;
+  color: var(--fg-muted);
+  background: var(--bg-soft);
+  border-right: 1px solid var(--border);
+  user-select: none;
+  overflow: hidden;
+}
+.editor .input,
+.editor .preview {
+  font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+  font-size: 14px; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-all;
+  padding: 12px; margin: 0;
+}
+.editor .input {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1;
+  display: block;
+  background: transparent;
+  color: transparent; -webkit-text-fill-color: transparent;
+  caret-color: var(--caret);
+  border: none; outline: none; resize: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.editor .input::selection {
+  background: rgba(90, 140, 255, .32);
+  -webkit-text-fill-color: transparent;
+}
+.editor .preview {
+  position: relative;
+  overflow: hidden; pointer-events: none;
+  color: var(--fg);
+  border-radius: inherit;
+}
+.editor .preview.empty::before { content: attr(data-placeholder); color: var(--placeholder); }
+
+.editor .preview .has-click {
+  animation: clickbg 4s linear infinite;
+  border-radius: 3px;
+}
+@keyframes clickbg {
+  0%   { background-color: #ff6b6b; }
+  16%  { background-color: #ffa94d; }
+  33%  { background-color: #ffd43b; }
+  50%  { background-color: #69db7c; }
+  66%  { background-color: #4dabf7; }
+  83%  { background-color: #cc5de8; }
+  100% { background-color: #ff6b6b; }
+}
+.editor .preview .needs-outline {
+  text-shadow: 1px 0 0 rgba(0,0,0,.35), -1px 0 0 rgba(0,0,0,.35),
+               0 1px 0 rgba(0,0,0,.35), 0 -1px 0 rgba(0,0,0,.35);
+}
+
+.editor .input::-webkit-scrollbar,
+.editor .preview::-webkit-scrollbar { width: 10px; height: 10px; }
+.editor .input::-webkit-scrollbar-thumb,
+.editor .preview::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+.editor .input::-webkit-scrollbar-track,
+.editor .preview::-webkit-scrollbar-track { background: transparent; }
+.editor .input, .editor .preview { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+.foot { color: var(--fg-muted); font-size: 12px; margin-top: 18px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 30px; transform: translate(-50%, 10px);
+  background: var(--toast-bg); color: var(--toast-fg);
+  padding: 9px 18px; border-radius: 999px; font-size: 13px;
+  opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+  z-index: 50; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+</style>
+<script>
+(function () {
+  var m = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  document.documentElement.setAttribute('data-theme', m && m.matches ? 'dark' : 'light');
+})();
+</script>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="../">返回主页</a>
+    <h1>Minecraft 文本组件生成器<span class="sub">Text Component Generator</span></h1>
+
+    <section class="card" aria-label="工具栏">
+    <div class="group">
+      <span class="group-label">样式</span>
+      <button type="button" class="btn seg-btn" data-style="bold" title="加粗">加粗</button>
+      <button type="button" class="btn seg-btn" data-style="italic" title="斜体">斜体</button>
+      <button type="button" class="btn seg-btn" data-style="underline" title="下划线">下划线</button>
+      <button type="button" class="btn seg-btn" data-style="strikethrough" title="删除线">删除线</button>
+      <button type="button" class="btn seg-btn" data-style="obfuscated" title="乱码（obfuscated）">乱码</button>
+    </div>
+    <div class="group">
+      <span class="group-label">颜色</span>
+      <div class="swatches" id="swatches"></div>
+      <input type="color" id="colorPicker" title="取色器" value="#FFFFFF">
+      <input type="text" id="hexInput" class="hex" placeholder="#FFFFFF" maxlength="7" spellcheck="false" title="输入十六进制颜色">
+    </div>
+    <div class="group">
+      <span class="group-label">点击事件</span>
+      <select id="clickAction" title="点击事件动作"></select>
+      <span class="param-label" id="clickParamLabel">command：</span>
+      <input type="text" id="clickValue" class="param-input" spellcheck="false" placeholder="输入 command 的值…">
+      <button type="button" class="btn" id="applyClickBtn">应用到选中文字</button>
+      <button type="button" class="btn" id="clearClickBtn">清除点击事件</button>
+    </div>
+    <div class="group">
+      <span class="group-label">渐变</span>
+      <button type="button" class="btn" id="gradientBtn" title="为选中文字应用从起始到结束的渐变颜色">彩虹渐变</button>
+      <label class="inline-label" for="gradStart">起始</label>
+      <input type="color" id="gradStart" title="渐变起始颜色" value="#FF0000">
+      <label class="inline-label" for="gradEnd">结束</label>
+      <input type="color" id="gradEnd" title="渐变结束颜色" value="#FF00FF">
+    </div>
+  </section>
+
+  <section class="card options-card" aria-label="输出选项">
+    <div class="options-row">
+      <span class="opt">
+        <input type="radio" name="format" value="single" id="fmtSingle" checked>
+        <label for="fmtSingle">单行</label>
+      </span>
+      <span class="opt">
+        <input type="radio" name="format" value="pretty" id="fmtPretty">
+        <label for="fmtPretty">格式化（缩进）</label>
+      </span>
+      <span class="opt">
+        <input type="checkbox" id="dialogMode">
+        <label for="dialogMode">直接生成 dialog 命令</label>
+      </span>
+      <span class="opt">
+        <label for="targetSelector">目标</label>
+        <select id="targetSelector" title="dialog 命令的目标选择器" disabled>
+          <option value="@p">@p</option>
+          <option value="@a" selected>@a</option>
+          <option value="@r">@r</option>
+          <option value="@s">@s</option>
+        </select>
+      </span>
+      <span class="opt">
+        <input type="checkbox" id="signMode">
+        <label for="signMode">生成告示牌</label>
+      </span>
+      <button type="button" class="btn primary" id="generateBtn">生成并复制</button>
+    </div>
+    <div class="options-subrow" id="signOptions">
+      <span class="opt">
+        <input type="radio" name="signOut" value="component" id="signComponent" checked>
+        <label for="signComponent">文本组件</label>
+      </span>
+      <span class="opt">
+        <input type="radio" name="signOut" value="setblock" id="signSetblock">
+        <label for="signSetblock">完整 setblock 命令</label>
+      </span>
+      <span class="opt">
+        <label for="signType">告示牌</label>
+        <select id="signType" title="选择告示牌类型"></select>
+      </span>
+    </div>
+  </section>
+    </div>
+  </div>
+
+<main>
+  <section class="card" aria-label="编辑器">
+    <div class="hint hidden" id="dialogHint">第一行内容将作为dialog的标题</div>
+    <div class="hint hidden" id="signHint">前4行内容将作为告示牌的4行文本</div>
+    <div class="editor">
+      <div class="linenums" id="linenums" aria-hidden="true"></div>
+      <div class="editor-body">
+        <pre class="preview" id="preview" aria-hidden="true" data-placeholder="在此输入文本…"></pre>
+        <textarea class="input" id="input" spellcheck="false" wrap="soft" aria-label="富文本编辑器"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">
+    用鼠标选中文字后，可为选中部分应用样式、颜色或点击事件；没有选中文字时，样式与颜色将应用到光标位置及之后输入的内容。<br>
+    含点击事件的文字会在编辑器中以不断变化的背景色高亮显示。<br>
+    点击「生成并复制」即可将结果直接复制到剪贴板。
+  </p>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+'use strict';
+
+var DEFAULT_COLOR = '#FFFFFF';
+
+var CLICK_ACTIONS = {
+  run_command:       { label: 'run_command（执行命令）',   param: 'command' },
+  open_url:          { label: 'open_url（打开链接）',      param: 'url' },
+  copy_to_clipboard: { label: 'copy_to_clipboard（复制）', param: 'value' },
+  show_dialog:       { label: 'show_dialog（显示对话框）', param: 'dialog' }
+};
+
+var PRESET_COLORS = [
+  ['#AA0000', '暗红'], ['#FF5555', '红'], ['#FFAA00', '金'], ['#FFFF55', '黄'],
+  ['#00AA00', '暗绿'], ['#55FF55', '绿'], ['#00AAAA', '深青'], ['#55FFFF', '青'],
+  ['#0000AA', '暗蓝'], ['#5555FF', '蓝'], ['#AA00AA', '紫'], ['#FF55FF', '粉'],
+  ['#FFFFFF', '白'], ['#AAAAAA', '灰'], ['#555555', '深灰'], ['#000000', '黑']
+];
+
+var SIGN_TYPES = [
+  ['oak_sign', '橡木告示牌'],
+  ['spruce_sign', '云杉木告示牌'],
+  ['birch_sign', '白桦木告示牌'],
+  ['jungle_sign', '丛林木告示牌'],
+  ['acacia_sign', '金合欢木告示牌'],
+  ['dark_oak_sign', '深色橡木告示牌'],
+  ['mangrove_sign', '红树木告示牌'],
+  ['cherry_sign', '樱花木告示牌'],
+  ['pale_oak_sign', '苍白橡木告示牌'],
+  ['bamboo_sign', '竹告示牌'],
+  ['poplar_sign', '杨木告示牌'],
+  ['crimson_sign', '绯红木告示牌'],
+  ['warped_sign', '诡异木告示牌'],
+  ['oak_wall_sign', '墙上的橡木告示牌'],
+  ['spruce_wall_sign', '墙上的云杉木告示牌'],
+  ['birch_wall_sign', '墙上的白桦木告示牌'],
+  ['jungle_wall_sign', '墙上的丛林木告示牌'],
+  ['acacia_wall_sign', '墙上的金合欢木告示牌'],
+  ['dark_oak_wall_sign', '墙上的深色橡木告示牌'],
+  ['mangrove_wall_sign', '墙上的红树木告示牌'],
+  ['cherry_wall_sign', '墙上的樱花木告示牌'],
+  ['pale_oak_wall_sign', '墙上的苍白橡木告示牌'],
+  ['bamboo_wall_sign', '墙上的竹告示牌'],
+  ['poplar_wall_sign', '墙上的杨木告示牌'],
+  ['crimson_wall_sign', '墙上的绯红木告示牌'],
+  ['warped_wall_sign', '墙上的诡异木告示牌']
+];
+
+// ---- element refs ----
+var input = document.getElementById('input');
+var preview = document.getElementById('preview');
+var linenums = document.getElementById('linenums');
+var generateBtn = document.getElementById('generateBtn');
+var dialogMode = document.getElementById('dialogMode');
+var dialogHint = document.getElementById('dialogHint');
+var targetSelector = document.getElementById('targetSelector');
+var signMode = document.getElementById('signMode');
+var signHint = document.getElementById('signHint');
+var signOptions = document.getElementById('signOptions');
+var signType = document.getElementById('signType');
+var signOutRadios = document.querySelectorAll('input[name="signOut"]');
+var gradientBtn = document.getElementById('gradientBtn');
+var gradStart = document.getElementById('gradStart');
+var gradEnd = document.getElementById('gradEnd');
+var formatRadios = document.querySelectorAll('input[name="format"]');
+var clickAction = document.getElementById('clickAction');
+var clickValue = document.getElementById('clickValue');
+var clickParamLabel = document.getElementById('clickParamLabel');
+var applyClickBtn = document.getElementById('applyClickBtn');
+var clearClickBtn = document.getElementById('clearClickBtn');
+var colorPicker = document.getElementById('colorPicker');
+var hexInput = document.getElementById('hexInput');
+var styleBtns = document.querySelectorAll('[data-style]');
+var swatchesWrap = document.getElementById('swatches');
+var toast = document.getElementById('toast');
+
+// ---- model ----
+var segments = [blankSegment()];
+var typingStyle = blankStyle();
+var lastCaretPos = -1;
+var toastTimer = null;
+
+function blankStyle() {
+  return { color: DEFAULT_COLOR, bold: false, italic: false, underline: false, strikethrough: false, obfuscated: false, click: null };
+}
+function blankSegment() {
+  var s = blankStyle();
+  s.text = '';
+  return s;
+}
+function cloneStyle(s) {
+  return {
+    color: s.color, bold: s.bold, italic: s.italic,
+    underline: s.underline, strikethrough: s.strikethrough, obfuscated: s.obfuscated,
+    click: s.click ? { action: s.click.action, value: s.click.value } : null
+  };
+}
+function cloneSegment(s, overrides) {
+  var c = cloneStyle(s);
+  c.text = s.text;
+  if (overrides) { for (var k in overrides) c[k] = overrides[k]; }
+  return c;
+}
+
+function fullText() {
+  var t = '';
+  for (var i = 0; i < segments.length; i++) t += segments[i].text;
+  return t;
+}
+function locate(pos) {
+  var acc = 0;
+  for (var i = 0; i < segments.length; i++) {
+    var len = segments[i].text.length;
+    if (pos < acc + len) return { i: i, off: pos - acc };
+    acc += len;
+  }
+  var last = segments.length - 1;
+  if (last < 0) return { i: 0, off: 0 };
+  return { i: last, off: segments[last].text.length };
+}
+function splitAtPos(pos) {
+  var total = fullText().length;
+  if (pos <= 0 || pos >= total) return;
+  var r = locate(pos);
+  var seg = segments[r.i];
+  if (r.off <= 0 || r.off >= seg.text.length) return;
+  var right = cloneSegment(seg, { text: seg.text.slice(r.off) });
+  seg.text = seg.text.slice(0, r.off);
+  segments.splice(r.i + 1, 0, right);
+}
+function firstIndexAtOrAfter(pos) {
+  var total = fullText().length;
+  if (pos >= total) return segments.length;
+  if (pos <= 0) return 0;
+  return locate(pos).i;
+}
+
+function applyEdit(newText) {
+  var oldText = fullText();
+  if (oldText === newText) return;
+  if (segments.length === 0) segments = [blankSegment()];
+
+  var min = Math.min(oldText.length, newText.length);
+  var i = 0;
+  while (i < min && oldText[i] === newText[i]) i++;
+  var j = 0;
+  while (j < oldText.length - i && j < newText.length - i &&
+         oldText[oldText.length - 1 - j] === newText[newText.length - 1 - j]) j++;
+  var start = i;
+  var oldEnd = oldText.length - j;
+  var newEnd = newText.length - j;
+  var inserted = newText.slice(start, newEnd);
+
+  var style = cloneStyle(typingStyle);
+
+  if (oldText.length === 0) {
+    segments = [Object.assign(blankSegment(), style, { text: inserted })];
+    lastCaretPos = input.selectionStart;
+    return;
+  }
+
+  splitAtPos(start);
+  splitAtPos(oldEnd);
+
+  var a = firstIndexAtOrAfter(start);
+  var b = firstIndexAtOrAfter(oldEnd);
+  var prefix = segments.slice(0, a);
+  var suffix = segments.slice(b);
+  var newSegs = prefix.slice();
+  if (inserted !== '' || (prefix.length === 0 && suffix.length === 0)) {
+    newSegs.push(Object.assign(blankSegment(), style, { text: inserted }));
+  }
+  segments = newSegs.concat(suffix);
+  mergeAdjacent();
+  lastCaretPos = input.selectionStart;
+}
+
+// 合并相邻且样式完全相同的文本段，避免逐字输入时产生多余的分段
+function sameStyle(a, b) {
+  if (a.color !== b.color || a.bold !== b.bold || a.italic !== b.italic ||
+      a.underline !== b.underline || a.strikethrough !== b.strikethrough ||
+      a.obfuscated !== b.obfuscated) return false;
+  if (a.click === null || b.click === null) return a.click === b.click;
+  return a.click.action === b.click.action && a.click.value === b.click.value;
+}
+function mergeAdjacent() {
+  if (segments.length < 2) return;
+  var out = [];
+  for (var i = 0; i < segments.length; i++) {
+    var last = out[out.length - 1];
+    var cur = segments[i];
+    if (last && sameStyle(last, cur)) {
+      last.text += cur.text;
+    } else {
+      out.push(cur);
+    }
+  }
+  segments = out;
+}
+
+// ---- selection / style application ----
+function applyToRange(start, end, fn) {
+  splitAtPos(start);
+  splitAtPos(end);
+  var a = firstIndexAtOrAfter(start);
+  var b = firstIndexAtOrAfter(end);
+  for (var k = a; k < b; k++) fn(segments[k]);
+}
+function commit() {
+  mergeAdjacent();
+  renderPreview();
+  updateOutput();
+  updateToolbarState();
+}
+function toggleStyle(prop) {
+  var start = input.selectionStart, end = input.selectionEnd;
+  var target;
+  if (start === end) {
+    target = !typingStyle[prop];
+    typingStyle[prop] = target;
+  } else {
+    applyToRange(start, end, function (seg) {
+      if (target === undefined) target = !seg[prop];
+      seg[prop] = target;
+    });
+    typingStyle[prop] = target;
+  }
+  lastCaretPos = start;
+  commit();
+}
+function setColor(hex) {
+  var norm = normalizeHex(hex);
+  if (!norm) return;
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) {
+    typingStyle.color = norm;
+  } else {
+    applyToRange(start, end, function (seg) { seg.color = norm; });
+    typingStyle.color = norm;
+  }
+  lastCaretPos = start;
+  commit();
+}
+function applyClickEvent() {
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) { showToast('请先选中要添加点击事件的文字'); return; }
+  var action = clickAction.value, value = clickValue.value;
+  applyToRange(start, end, function (seg) { seg.click = { action: action, value: value }; });
+  commit();
+  showToast('已添加点击事件');
+}
+function clearClickEvent() {
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) { showToast('请先选中要清除点击事件的文字'); return; }
+  applyToRange(start, end, function (seg) { seg.click = null; });
+  commit();
+  showToast('已清除点击事件');
+}
+
+// ---- 彩虹渐变 ----
+function rgbToHex(r, g, b) {
+  function cv(v) {
+    v = Math.max(0, Math.min(255, Math.round(v)));
+    return (v < 16 ? '0' : '') + v.toString(16).toUpperCase();
+  }
+  return '#' + cv(r) + cv(g) + cv(b);
+}
+function hexToRgb(hex) {
+  var h = (hex || '#FFFFFF').replace('#', '');
+  return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+}
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  var max = Math.max(r, g, b), min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
+  if (max === min) { h = 0; s = 0; }
+  else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h /= 6;
+  }
+  return { h: h, s: s, l: l };
+}
+function hslToRgb(h, s, l) {
+  var r, g, b;
+  if (s === 0) { r = g = b = l; }
+  else {
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+    function h2(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
+    r = h2(p, q, h + 1 / 3);
+    g = h2(p, q, h);
+    b = h2(p, q, h - 1 / 3);
+  }
+  return { r: r * 255, g: g * 255, b: b * 255 };
+}
+function gradientColors(startHex, endHex, steps) {
+  var colors = [];
+  if (steps <= 0) return colors;
+  var sr = hexToRgb(startHex), er = hexToRgb(endHex);
+  var s = rgbToHsl(sr.r, sr.g, sr.b);
+  var e = rgbToHsl(er.r, er.g, er.b);
+  for (var i = 0; i < steps; i++) {
+    var t = steps === 1 ? 0 : i / (steps - 1);
+    var h = s.h + (e.h - s.h) * t;
+    var sl = s.s + (e.s - s.s) * t;
+    var l = s.l + (e.l - s.l) * t;
+    var rgb = hslToRgb(((h % 1) + 1) % 1, sl, l);
+    colors.push(rgbToHex(rgb.r, rgb.g, rgb.b));
+  }
+  return colors;
+}
+function applyGradient() {
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) { showToast('请先选中要应用渐变颜色的文字'); return; }
+  var cols = gradientColors(gradStart.value, gradEnd.value, end - start);
+  splitAtPos(start);
+  splitAtPos(end);
+  var a = firstIndexAtOrAfter(start);
+  var b = firstIndexAtOrAfter(end);
+  var prefix = segments.slice(0, a);
+  var suffix = segments.slice(b);
+  var middle = [];
+  var pos = start;
+  for (var k = a; k < b; k++) {
+    var seg = segments[k];
+    for (var ci = 0; ci < seg.text.length; ci++) {
+      middle.push(cloneSegment(seg, { text: seg.text[ci], color: cols[pos - start] }));
+      pos++;
+    }
+  }
+  segments = prefix.concat(middle).concat(suffix);
+  if (middle.length) typingStyle = cloneStyle(middle[middle.length - 1]);
+  commit();
+  showToast('已应用渐变颜色');
+}
+
+// ---- caret / toolbar state ----
+function caretSegment() {
+  var total = fullText().length;
+  if (total === 0) return segments[0] || blankSegment();
+  var pos = input.selectionStart;
+  if (pos >= total) pos = total - 1;
+  return segments[locate(pos).i];
+}
+function reflectedStyle() {
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) return typingStyle;
+  var total = fullText().length;
+  if (total === 0) return typingStyle;
+  var p = start >= total ? total - 1 : start;
+  return segments[locate(p).i];
+}
+function refreshTypingStyle() {
+  var pos = input.selectionStart;
+  if (pos === lastCaretPos) return;
+  lastCaretPos = pos;
+  typingStyle = cloneStyle(caretSegment());
+}
+function updateToolbarState() {
+  var seg = reflectedStyle();
+  styleBtns.forEach(function (b) { b.classList.toggle('active', !!seg[b.getAttribute('data-style')]); });
+  var c = (seg.color || DEFAULT_COLOR).toUpperCase();
+  colorPicker.value = c;
+  hexInput.value = c;
+  var sw = swatchesWrap.querySelectorAll('.swatch');
+  for (var i = 0; i < sw.length; i++) {
+    sw[i].classList.toggle('active', sw[i].getAttribute('data-color').toUpperCase() === c);
+  }
+}
+
+// ---- rendering ----
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function isLightColor(hex) {
+  var h = (hex || '#FFFFFF').replace('#', '');
+  var r = parseInt(h.slice(0, 2), 16);
+  var g = parseInt(h.slice(2, 4), 16);
+  var b = parseInt(h.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 195;
+}
+function renderPreview() {
+  if (segments.length === 0) segments = [blankSegment()];
+  preview.classList.toggle('empty', fullText().length === 0);
+  var light = document.documentElement.getAttribute('data-theme') !== 'dark';
+  var parts = [];
+  for (var i = 0; i < segments.length; i++) {
+    var seg = segments[i];
+    var col = seg.color || DEFAULT_COLOR;
+    var p = [];
+    p.push('color:' + col);
+    p.push('font-weight:' + (seg.bold ? '700' : '400'));
+    p.push('font-style:' + (seg.italic ? 'italic' : 'normal'));
+    var deco = [];
+    if (seg.underline) deco.push('underline');
+    if (seg.strikethrough) deco.push('line-through');
+    p.push('text-decoration:' + (deco.join(' ') || 'none'));
+    var cls = 'seg';
+    if (seg.click) cls += ' has-click';
+    if (light && isLightColor(col)) cls += ' needs-outline';
+    parts.push('<span class="' + cls + '" style="' + p.join(';') + '">' + escapeHtml(seg.text) + '</span>');
+  }
+  preview.innerHTML = parts.join('');
+  updateLineNumbers();
+}
+
+// ---- output generation ----
+function normalizeHex(s) {
+  if (!s) return null;
+  var h = String(s).trim().replace(/^#/, '');
+  if (/^[0-9a-fA-F]{3}$/.test(h)) h = h.split('').map(function (c) { return c + c; }).join('');
+  if (/^[0-9a-fA-F]{6}$/.test(h)) return '#' + h.toUpperCase();
+  return null;
+}
+function segToObj(seg) {
+  var o = { text: seg.text };
+  var col = (seg.color || DEFAULT_COLOR).toUpperCase();
+  if (col !== DEFAULT_COLOR) o.color = col;
+  o.italic = !!seg.italic;
+  if (seg.bold) o.bold = true;
+  if (seg.underline) o.underline = true;
+  if (seg.strikethrough) o.strikethrough = true;
+  if (seg.obfuscated) o.obfuscated = true;
+  if (seg.click) {
+    var info = CLICK_ACTIONS[seg.click.action];
+    var param = info ? info.param : 'value';
+    o.click_event = { action: seg.click.action };
+    o.click_event[param] = seg.click.value;
+  }
+  return o;
+}
+function componentOf(segs) {
+  var list = [];
+  for (var i = 0; i < segs.length; i++) {
+    var o = segToObj(segs[i]);
+    if (o.text !== '') list.push(o);
+  }
+  if (list.length === 0) return { text: '' };
+  return list.length === 1 ? list[0] : list;
+}
+function splitIntoLines(segs, count) {
+  var lines = [];
+  for (var i = 0; i < count; i++) lines.push([]);
+  var lineIdx = 0;
+  for (var i = 0; i < segs.length; i++) {
+    if (lineIdx >= count) break;
+    var seg = segs[i];
+    var parts = seg.text.split('\n');
+    lines[lineIdx].push(cloneSegment(seg, { text: parts[0] }));
+    for (var k = 1; k < parts.length; k++) {
+      lineIdx++;
+      if (lineIdx >= count) break;
+      lines[lineIdx].push(cloneSegment(seg, { text: parts[k] }));
+    }
+  }
+  return lines;
+}
+function getSignOut() {
+  for (var i = 0; i < signOutRadios.length; i++) if (signOutRadios[i].checked) return signOutRadios[i].value;
+  return 'component';
+}
+function splitForDialog(segs) {
+  var title = [], body = [];
+  var crossed = false;
+  for (var i = 0; i < segs.length; i++) {
+    var seg = segs[i];
+    if (!crossed) {
+      var idx = seg.text.indexOf('\n');
+      if (idx === -1) {
+        title.push(cloneSegment(seg));
+      } else {
+        title.push(cloneSegment(seg, { text: seg.text.slice(0, idx) }));
+        crossed = true;
+        body.push(cloneSegment(seg, { text: seg.text.slice(idx + 1) }));
+      }
+    } else {
+      body.push(cloneSegment(seg));
+    }
+  }
+  return { title: title, body: body };
+}
+function getFormat() {
+  for (var i = 0; i < formatRadios.length; i++) if (formatRadios[i].checked) return formatRadios[i].value;
+  return 'single';
+}
+// Minecraft 的命令 JSON 解析器允许不带引号的键名，
+// 这里用自定义序列化器输出 {text:"1",bold:false,color:"#FF0000"} 这种风格。
+function mcStringify(v) {
+  if (v === null) return 'null';
+  var t = typeof v;
+  if (t === 'string') return JSON.stringify(v);
+  if (t === 'boolean' || t === 'number') return String(v);
+  if (Array.isArray(v)) {
+    var a = [];
+    for (var i = 0; i < v.length; i++) a.push(mcStringify(v[i]));
+    return '[' + a.join(',') + ']';
+  }
+  var parts = [];
+  for (var k in v) {
+    if (Object.prototype.hasOwnProperty.call(v, k)) parts.push(k + ':' + mcStringify(v[k]));
+  }
+  return '{' + parts.join(',') + '}';
+}
+function pad(n) { return n > 0 ? new Array(n + 1).join('  ') : ''; }
+function mcStringifyPretty(v, depth) {
+  depth = depth || 0;
+  if (v === null) return 'null';
+  var t = typeof v;
+  if (t === 'string') return JSON.stringify(v);
+  if (t === 'boolean' || t === 'number') return String(v);
+  if (Array.isArray(v)) {
+    if (v.length === 0) return '[]';
+    var a = [];
+    for (var i = 0; i < v.length; i++) a.push(pad(depth + 1) + mcStringifyPretty(v[i], depth + 1));
+    return '[\n' + a.join(',\n') + '\n' + pad(depth) + ']';
+  }
+  var parts = [];
+  for (var k in v) {
+    if (Object.prototype.hasOwnProperty.call(v, k)) parts.push(pad(depth + 1) + k + ': ' + mcStringifyPretty(v[k], depth + 1));
+  }
+  if (parts.length === 0) return '{}';
+  return '{\n' + parts.join(',\n') + '\n' + pad(depth) + '}';
+}
+function buildOutput() {
+  if (signMode.checked) {
+    var lines = splitIntoLines(segments, 4);
+    var messages = [];
+    for (var i = 0; i < 4; i++) messages.push(componentOf(lines[i]));
+    var data = { front_text: { messages: messages } };
+    if (getSignOut() === 'setblock') {
+      return '/setblock ~ ~ ~ ' + (signType.value || 'oak_sign') + '[]' + mcStringify(data);
+    }
+    return getFormat() === 'pretty' ? mcStringifyPretty(data) : mcStringify(data);
+  }
+  if (dialogMode.checked) {
+    var sp = splitForDialog(segments);
+    var dlg = {
+      type: 'minecraft:notice',
+      title: componentOf(sp.title),
+      body: [{ type: 'minecraft:plain_message', contents: componentOf(sp.body) }]
+    };
+    return '/dialog show ' + (targetSelector.value || '@a') + ' ' + mcStringify(dlg);
+  }
+  var comp = componentOf(segments);
+  return getFormat() === 'pretty' ? mcStringifyPretty(comp) : mcStringify(comp);
+}
+function updateOutput() { /* 结果预览已移除，生成结果由「生成并复制」直接复制 */ }
+function generate() {
+  return buildOutput();
+}
+function updateLineNumbers() {
+  if (!linenums) return;
+  var n = fullText().split('\n').length;
+  var parts = [];
+  for (var i = 1; i <= n; i++) parts.push(String(i));
+  linenums.textContent = parts.join('\n');
+}
+
+// ---- clipboard ----
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text).then(function () { return true; }).catch(function () { return fallbackCopy(text); });
+  }
+  return Promise.resolve(fallbackCopy(text));
+}
+function fallbackCopy(text) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    ta.style.pointerEvents = 'none';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    return ok;
+  } catch (e) { return false; }
+}
+
+// ---- toast ----
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+}
+
+// ---- events ----
+input.addEventListener('input', function () {
+  applyEdit(input.value);
+  renderPreview();
+  updateOutput();
+  updateToolbarState();
+});
+input.addEventListener('scroll', function () {
+  preview.scrollTop = input.scrollTop;
+  preview.scrollLeft = input.scrollLeft;
+});
+document.addEventListener('selectionchange', function () {
+  if (document.activeElement !== input) return;
+  refreshTypingStyle();
+  updateToolbarState();
+});
+
+styleBtns.forEach(function (b) {
+  b.addEventListener('click', function () { toggleStyle(b.getAttribute('data-style')); });
+});
+gradientBtn.addEventListener('click', applyGradient);
+colorPicker.addEventListener('input', function () { setColor(colorPicker.value); });
+hexInput.addEventListener('input', function () {
+  var hex = normalizeHex(hexInput.value);
+  if (hex) setColor(hex);
+});
+hexInput.addEventListener('blur', function () {
+  hexInput.value = reflectedStyle().color.toUpperCase();
+});
+applyClickBtn.addEventListener('click', applyClickEvent);
+clearClickBtn.addEventListener('click', clearClickEvent);
+
+clickAction.addEventListener('change', function () { updateClickUI(); });
+function updateModeUI() {
+  var dlg = dialogMode.checked;
+  var sign = signMode.checked;
+  var signSet = sign && getSignOut() === 'setblock';
+  dialogHint.classList.toggle('hidden', !dlg);
+  signHint.classList.toggle('hidden', !sign);
+  signOptions.classList.toggle('show', sign);
+  targetSelector.disabled = !dlg;
+  signType.disabled = !signSet;
+  for (var i = 0; i < formatRadios.length; i++) formatRadios[i].disabled = dlg || signSet;
+  updateOutput();
+}
+dialogMode.addEventListener('change', function () {
+  if (dialogMode.checked) signMode.checked = false;
+  updateModeUI();
+});
+signMode.addEventListener('change', function () {
+  if (signMode.checked) dialogMode.checked = false;
+  updateModeUI();
+});
+signOutRadios.forEach(function (r) {
+  r.addEventListener('change', updateModeUI);
+});
+formatRadios.forEach(function (r) {
+  r.addEventListener('change', updateOutput);
+});
+
+generateBtn.addEventListener('click', function () {
+  var out = generate();
+  copyText(out).then(function (ok) {
+    showToast(ok ? '已生成并复制' : '已生成，但复制失败，请手动复制');
+  });
+});
+
+// ---- theme ----
+function applyTheme(e) {
+  document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+  renderPreview();
+}
+var mq = window.matchMedia('(prefers-color-scheme: dark)');
+if (mq.addEventListener) mq.addEventListener('change', applyTheme);
+else if (mq.addListener) mq.addListener(applyTheme);
+
+// ---- init ----
+function updateClickUI() {
+  var info = CLICK_ACTIONS[clickAction.value];
+  clickParamLabel.textContent = info.param + '：';
+  clickValue.placeholder = '输入 ' + info.param + ' 的值…';
+}
+function buildSwatches() {
+  for (var i = 0; i < PRESET_COLORS.length; i++) {
+    var hex = PRESET_COLORS[i][0], name = PRESET_COLORS[i][1];
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'swatch';
+    b.setAttribute('data-color', hex);
+    b.title = hex + ' ' + name;
+    b.style.background = hex;
+    (function (h) {
+      b.addEventListener('click', function () { setColor(h); });
+    })(hex);
+    swatchesWrap.appendChild(b);
+  }
+}
+function buildActions() {
+  for (var key in CLICK_ACTIONS) {
+    if (!CLICK_ACTIONS.hasOwnProperty(key)) continue;
+    var opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = CLICK_ACTIONS[key].label;
+    clickAction.appendChild(opt);
+  }
+}
+function buildSignTypes() {
+  for (var i = 0; i < SIGN_TYPES.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = SIGN_TYPES[i][0];
+    opt.textContent = SIGN_TYPES[i][1] + '（' + SIGN_TYPES[i][0] + '）';
+    signType.appendChild(opt);
+  }
+}
+
+buildSwatches();
+buildActions();
+buildSignTypes();
+clickAction.value = 'run_command';
+input.value = '';
+renderPreview();
+updateOutput();
+updateToolbarState();
+updateClickUI();
+updateModeUI();
+})();
+</script>
+</body>
+</html>

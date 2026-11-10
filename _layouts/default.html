@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="{{ site.lang | escape }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title | escape }} · {% endif %}{{ site.title | escape }}</title>
+  <meta name="description" content="{{ page.description | default: site.description | escape }}">
+  <meta name="color-scheme" content="light dark">
+  <script src="{{ '/assets/theme.js' | relative_url }}"></script>
+  <script type="module" src="{{ '/assets/vendor/material-web.js' | relative_url }}"></script>
+  <link rel="stylesheet" href="{{ '/assets/style.css' | relative_url }}">
+</head>
+<body>
+  {% assign home_url = '/' | relative_url %}
+  {% assign articles_url = home_url | append: '#articles' %}
+  {% assign about_url = '/about/' | relative_url %}
+  {% if page.url == '/' %}{% assign home_current = 'page' %}{% endif %}
+  {% if page.layout == 'post' %}{% assign articles_current = 'location' %}{% endif %}
+  {% if page.url == '/about/' %}{% assign about_current = 'page' %}{% endif %}
+  {% include icons.svg %}
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header>
+    <div class="shell app-bar-inner">
+      {% include material-link.html class="brand" href=home_url label=site.title icon_class="brand-mark" %}
+      <nav class="nav" aria-label="主导航">
+        {% include material-link.html class="nav-home" href=home_url label="首页" current=home_current %}
+        {% include material-link.html href=articles_url label="文章" current=articles_current %}
+        {% include material-link.html href=about_url label="碎碎念" current=about_current %}
+      </nav>
+      <md-filled-tonal-icon-button class="theme-toggle" type="button" toggle aria-label="深色模式" title="切换深色模式" hidden>
+        <svg aria-hidden="true"><use href="#moon"></use></svg>
+        <svg slot="selected" aria-hidden="true"><use href="#sun"></use></svg>
+      </md-filled-tonal-icon-button>
+    </div>
+    <md-divider></md-divider>
+  </header>
+
+  <main class="shell main" id="main" tabindex="-1">{{ content }}</main>
+
+  <md-divider class="shell"></md-divider>
+  <footer class="shell footer">
+    <span>底栏小字</span>
+  </footer>
+</body>
+</html>

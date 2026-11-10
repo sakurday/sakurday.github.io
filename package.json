@@ -1,0 +1,13 @@
+{
+  "name": "prism-notes",
+  "private": true,
+  "scripts": {
+    "build:material": "node scripts/build-material-web.mjs"
+  },
+  "dependencies": {
+    "@material/web": "2.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

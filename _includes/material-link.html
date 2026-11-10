@@ -1,0 +1,10 @@
+{%- assign material_link_tag = include.component | default: 'md-text-button' -%}
+{%- if include.current -%}
+  {%- assign material_link_tag = 'md-filled-tonal-button' -%}
+{%- endif -%}
+{%- capture material_link_content -%}
+  {% if include.icon %}<svg slot="icon" class="{{ include.icon_class }}" aria-hidden="true"><use href="#{{ include.icon }}"></use></svg>{% endif %}
+  {{ include.label | escape }}
+{%- endcapture -%}
+<{{ material_link_tag }} class="material-link {{ include.class }}" href="{{ include.href | escape }}"{% if include.current %} aria-current="{{ include.current }}" aria-label="{{ include.label | escape }}{% if include.current == 'page' %}（当前页面）{% else %}（当前栏目）{% endif %}"{% endif %}>{{ material_link_content }}</{{ material_link_tag }}>
+<a class="material-link-fallback {{ include.class }}" href="{{ include.href | escape }}"{% if include.current %} aria-current="{{ include.current }}"{% endif %}>{{ material_link_content }}</a>

@@ -1,0 +1,3045 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft 文本组件 &amp; Dialog 生成器</title>
+<style>
+* { box-sizing: border-box; }
+
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-soft: #f4f5f6;
+  --fg: #1d2024;
+  --fg-muted: #62686f;
+  --border: #d9dde1;
+  --accent: #2f6fed;
+  --accent-fg: #ffffff;
+  --active: #d7e5ff;
+  --btn-bg: #edf0f2;
+  --btn-hover: #e1e5e9;
+  --editor-bg: #ffffff;
+  --caret: #1d2024;
+  --placeholder: #9aa1a8;
+  --code-bg: #f4f5f6;
+  --toast-bg: #23262a;
+  --toast-fg: #f2f3f4;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #191b1e;
+  --bg-soft: #23262b;
+  --fg: #e7e9ec;
+  --fg-muted: #9aa1a8;
+  --border: #3a3f46;
+  --accent: #6c95f0;
+  --accent-fg: #0f1420;
+  --active: #2b3a55;
+  --btn-bg: #2a2e34;
+  --btn-hover: #363b42;
+  --editor-bg: #15171a;
+  --caret: #e7e9ec;
+  --placeholder: #5f666e;
+  --code-bg: #202327;
+  --toast-bg: #e7e9ec;
+  --toast-fg: #191b1e;
+}
+
+html, body { margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+}
+main { max-width: 900px; margin: 0 auto; padding: 20px 16px 72px; }
+h1 { font-size: 19px; font-weight: 600; margin: 0 0 18px; }
+h1 .sub { font-size: 13px; font-weight: 400; color: var(--fg-muted); margin-left: 8px; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-inner { padding: 6px 12px 2px; }
+.topbar-inner h1 { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+.topbar-inner h1 .sub { margin-left: 6px; }
+
+.toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  margin-bottom: 2px;
+}
+.toolbar .group { padding: 3px 0; flex-wrap: wrap; }
+.toolbar .group + .group {
+  border-top: none;
+  border-left: 1px solid var(--border);
+  padding-left: 12px; margin-left: 6px;
+}
+.toolbar .group-label { min-width: 0; font-size: 11px; }
+
+.topbar .card {
+  border: none; background: transparent;
+  padding: 0; margin: 0 0 2px;
+}
+.topbar .options-row { gap: 14px; padding: 2px 0 4px; }
+.topbar .options-subrow { gap: 14px; margin-top: 4px; padding-top: 4px; }
+.topbar .btn { padding: 4px 9px; font-size: 12px; }
+.topbar .seg-btn { min-width: 40px; }
+.topbar select, .topbar input[type="text"] { padding: 4px 7px; font-size: 12px; }
+.topbar .swatch { width: 17px; height: 17px; }
+.topbar input[type="color"] { width: 28px; height: 24px; }
+.topbar .param-input { min-width: 120px; }
+.topbar .hex { width: 72px; }
+.topbar .opt { gap: 4px; }
+.topbar .inline-label { font-size: 11px; }
+.topbar .radios { gap: 4px 10px; }
+.topbar .radios .fcheck { font-size: 12px; }
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  padding: 6px 14px;
+  margin-bottom: 14px;
+}
+
+.group {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 0;
+}
+.group + .group { border-top: 1px solid var(--border); }
+.group-label { flex: 0 0 auto; font-size: 12px; color: var(--fg-muted); min-width: 56px; }
+
+button { font-family: inherit; }
+.btn {
+  background: var(--btn-bg); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 6px 12px; font-size: 13px; cursor: pointer;
+}
+.btn:hover { background: var(--btn-hover); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn.primary:hover { background: var(--accent); filter: brightness(1.1); }
+.btn.active { background: var(--active); border-color: var(--accent); color: var(--accent); }
+.btn.active:hover { background: var(--active); }
+.seg-btn { min-width: 54px; }
+
+.swatches { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.swatch {
+  width: 20px; height: 20px; border-radius: 5px; padding: 0; cursor: pointer;
+  border: 1px solid var(--border);
+}
+.swatch:hover { transform: scale(1.08); }
+.swatch.active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+
+input[type="text"], select {
+  padding: 6px 8px; font-size: 13px;
+  border: 1px solid var(--border); border-radius: 7px;
+  background: var(--bg); color: var(--fg);
+}
+.hex { width: 88px; font-family: ui-monospace, Consolas, "Courier New", monospace; text-transform: uppercase; }
+input[type="color"] {
+  width: 34px; height: 30px; padding: 2px;
+  border: 1px solid var(--border); border-radius: 7px; background: var(--bg); cursor: pointer;
+}
+.param-input { min-width: 190px; flex: 1; }
+.param-label { font-size: 12px; color: var(--fg-muted); font-family: ui-monospace, Consolas, monospace; }
+
+.options-card { padding: 12px 14px; }
+.options-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.options-subrow {
+  display: none;
+  align-items: center; gap: 22px; flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  margin-top: 12px; padding-top: 12px;
+}
+.options-subrow.show { display: flex; }
+.opt { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; margin: 0; }
+.opt input[type="radio"], .opt input[type="checkbox"] { accent-color: var(--accent); margin: 0; }
+.opt select { padding: 5px 8px; }
+#generateBtn { margin-left: auto; }
+.inline-label { font-size: 12px; color: var(--fg-muted); }
+
+.hint {
+  font-size: 13px; color: var(--accent);
+  background: var(--active);
+  border-radius: 7px; padding: 7px 11px; margin-bottom: 10px;
+}
+.hidden { display: none; }
+
+.editor { display: flex; align-items: stretch; border: 1px solid var(--border); border-radius: 10px; min-height: 480px; background: var(--editor-bg); overflow: hidden; }
+.editor:focus-within { border-color: var(--accent); }
+.editor-body { position: relative; flex: 1; min-width: 0; }
+.linenums {
+  flex: 0 0 auto;
+  min-width: 2.4em;
+  padding: 12px 10px 12px 12px;
+  font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+  font-size: 14px; line-height: 1.6;
+  white-space: pre;
+  text-align: right;
+  color: var(--fg-muted);
+  background: var(--bg-soft);
+  border-right: 1px solid var(--border);
+  user-select: none;
+  overflow: hidden;
+}
+.editor .input,
+.editor .preview {
+  font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+  font-size: 14px; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-all;
+  padding: 12px; margin: 0;
+}
+.editor .input {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1;
+  display: block;
+  background: transparent;
+  color: transparent; -webkit-text-fill-color: transparent;
+  caret-color: var(--caret);
+  border: none; outline: none; resize: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.editor .input::selection {
+  background: rgba(90, 140, 255, .32);
+  -webkit-text-fill-color: transparent;
+}
+.editor .preview {
+  position: relative;
+  overflow: hidden; pointer-events: none;
+  color: var(--fg);
+  border-radius: inherit;
+}
+.editor .preview.empty::before { content: attr(data-placeholder); color: var(--placeholder); }
+
+.editor .preview .has-click {
+  animation: clickbg 4s linear infinite;
+  border-radius: 3px;
+}
+@keyframes clickbg {
+  0%   { background-color: #ff6b6b; }
+  16%  { background-color: #ffa94d; }
+  33%  { background-color: #ffd43b; }
+  50%  { background-color: #69db7c; }
+  66%  { background-color: #4dabf7; }
+  83%  { background-color: #cc5de8; }
+  100% { background-color: #ff6b6b; }
+}
+.editor .preview .needs-outline {
+  text-shadow: 1px 0 0 rgba(0,0,0,.35), -1px 0 0 rgba(0,0,0,.35),
+               0 1px 0 rgba(0,0,0,.35), 0 -1px 0 rgba(0,0,0,.35);
+}
+
+.editor .input::-webkit-scrollbar,
+.editor .preview::-webkit-scrollbar { width: 10px; height: 10px; }
+.editor .input::-webkit-scrollbar-thumb,
+.editor .preview::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+.editor .input::-webkit-scrollbar-track,
+.editor .preview::-webkit-scrollbar-track { background: transparent; }
+.editor .input, .editor .preview { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+.foot { color: var(--fg-muted); font-size: 12px; margin-top: 18px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 30px; transform: translate(-50%, 10px);
+  background: var(--toast-bg); color: var(--toast-fg);
+  padding: 9px 18px; border-radius: 999px; font-size: 13px;
+  opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+  z-index: 50; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ================= Dialog 编辑器 (Minecraft 1.21.6) ================= */
+[hidden], .hidden { display: none !important; }
+
+.mode-bar {
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border);
+}
+.mode-btn {
+  background: transparent; color: var(--fg-muted);
+  border: 1px solid transparent; border-radius: 8px;
+  padding: 5px 16px; font-size: 13px; cursor: pointer;
+}
+.mode-btn:hover { color: var(--fg); background: var(--btn-hover); }
+.mode-btn.active {
+  background: var(--accent); color: var(--accent-fg); border-color: var(--accent);
+}
+
+.field-banner {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--active); color: var(--accent);
+  border-radius: 7px; padding: 6px 11px; margin: 4px 0 8px;
+  font-size: 13px;
+}
+.field-banner .sp { flex: 1; }
+
+#dialogMain { max-width: 1240px; }
+
+.dlg-layout {
+  display: grid; grid-template-columns: 264px minmax(0, 1fr);
+  gap: 14px; align-items: start;
+  margin-bottom: 14px;
+}
+.dlg-nav {
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg);
+  padding: 8px;
+  position: sticky; top: 64px;
+  max-height: calc(100vh - 80px); overflow: auto;
+}
+.nav-group { margin-bottom: 6px; }
+.nav-group-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%;
+  background: var(--bg-soft); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 5px 9px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left;
+}
+.nav-group-head:hover { background: var(--btn-hover); }
+.nav-group-head .cnt { font-weight: 400; color: var(--fg-muted); }
+.nav-group-head .errbadge {
+  background: #e5484d; color: #fff; border-radius: 999px;
+  font-size: 10px; min-width: 15px; height: 15px; line-height: 15px;
+  text-align: center; padding: 0 4px; flex: 0 0 auto;
+}
+.nav-items { padding: 4px 0 2px 8px; display: flex; flex-direction: column; gap: 2px; }
+.nav-item {
+  display: flex; align-items: center; gap: 6px;
+  background: transparent; border: none; border-radius: 6px;
+  color: var(--fg); font-size: 12px; cursor: pointer; text-align: left;
+  padding: 4px 8px; width: 100%;
+}
+.nav-item:hover { background: var(--btn-hover); }
+.nav-item.selected { background: var(--active); color: var(--accent); }
+.nav-item .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-item .sub { font-size: 11px; color: var(--fg-muted); flex: 0 0 auto; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.dlg-detail {
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg);
+  padding: 14px 16px;
+  min-height: 320px;
+}
+.detail-title { font-size: 14px; font-weight: 600; margin: 0 0 12px; }
+
+.frow { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; }
+.flabel { flex: 0 0 150px; font-size: 12px; color: var(--fg-muted); padding-top: 6px; }
+.fcontrol { flex: 1; min-width: 0; }
+.fhint { font-size: 11px; color: var(--fg-muted); margin-top: 4px; }
+.finput, .ftextarea, .fselect {
+  width: 100%; padding: 6px 8px; font-size: 13px;
+  border: 1px solid var(--border); border-radius: 7px;
+  background: var(--bg); color: var(--fg);
+}
+.ftextarea { resize: vertical; font-family: ui-monospace, Consolas, monospace; line-height: 1.5; }
+.fnumber { width: 120px; }
+.fcheck { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; margin: 0; }
+.fcheck input { accent-color: var(--accent); margin: 0; }
+.subhead { font-size: 12px; font-weight: 600; color: var(--accent); margin: 14px 0 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+.subhead:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+
+.chip {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; background: var(--bg-soft);
+  min-height: 34px;
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--accent); }
+.chip .lbl { font-size: 11px; color: var(--fg-muted); flex: 0 0 auto; pointer-events: none; }
+.chip .chip-comp { flex: 1; min-width: 120px; font-size: 13px; pointer-events: none; }
+.radios { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+.radios.col { flex-direction: column; align-items: flex-start; gap: 5px; }
+.radios .fcheck { font-size: 12px; }
+.muted { color: var(--fg-muted); }
+.code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+
+.btn.small { padding: 3px 8px; font-size: 12px; }
+.btn.danger { background: #e5484d; border-color: #e5484d; color: #fff; }
+.btn.danger:hover { filter: brightness(1.1); }
+
+.keybar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; font-size: 12px; color: var(--fg-muted); }
+.keychip { font-family: ui-monospace, Consolas, monospace; font-size: 11px; }
+.keyuse { margin-top: 4px; }
+
+.list-block { margin-top: 4px; }
+.lrow {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 5px 8px; margin-bottom: 6px; background: var(--bg);
+}
+.lrow .grip { color: var(--fg-muted); font-size: 12px; flex: 0 0 auto; }
+.lrow .main {
+  flex: 1; min-width: 0; text-align: left;
+  background: none; border: none; color: var(--fg); cursor: pointer;
+  font-size: 13px; padding: 2px 4px; border-radius: 5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lrow .main:hover { background: var(--btn-hover); }
+.lrow .sub { font-size: 11px; color: var(--fg-muted); margin-left: 6px; }
+.lrow .ops { display: flex; gap: 3px; flex: 0 0 auto; }
+.lrow .ops .btn { padding: 2px 7px; font-size: 12px; }
+.lrow .finput { width: 130px; flex: 0 0 130px; }
+.lrow .fcheck { flex: 0 0 auto; }
+.addbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.addbar .lbl { font-size: 12px; color: var(--fg-muted); }
+
+/* preview */
+.dlg-preview-card, .dlg-output-card { margin-top: 14px; }
+.sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.sec-head h2 { font-size: 15px; margin: 0; }
+.dlg-preview {
+  background: var(--bg-soft);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 22px 16px;
+  display: flex; justify-content: center;
+  overflow: auto; min-height: 140px;
+}
+.dp {
+  width: min(520px, 100%);
+  background: var(--bg);
+  border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  padding: 20px 24px 18px;
+  text-align: center;
+}
+.dp-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+.dp-body { font-size: 13px; line-height: 1.6; margin-bottom: 14px; }
+.dp-msg { margin-bottom: 8px; }
+.dp-msg:last-child { margin-bottom: 0; }
+.dp-item {
+  display: inline-block; border: 1px solid var(--border); border-radius: 6px;
+  padding: 5px 10px; font-size: 12px; background: var(--btn-bg);
+}
+.dp-inputs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; align-items: center; }
+.dp-input { display: flex; align-items: center; gap: 8px; font-size: 13px; flex-wrap: wrap; justify-content: center; }
+.dp-lbl { font-size: 12px; color: var(--fg-muted); }
+.dp-widget {
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 12px; min-width: 200px; text-align: left;
+  background: var(--bg); font-size: 13px; color: var(--fg-muted);
+  min-height: 26px; display: flex; align-items: center;
+}
+.dp-widget.dp-check { min-width: auto; padding: 2px 6px; }
+.dp-range { position: relative; min-height: 6px; height: 6px; background: var(--border); border-radius: 3px; border: none; }
+.dp-slider { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; background: var(--accent); border-radius: 50%; }
+.dp-actions { display: grid; gap: 8px; margin-top: 14px; }
+.dp-btn {
+  border: 1px solid var(--border); border-radius: 7px;
+  background: var(--btn-bg); color: var(--fg);
+  padding: 7px 12px; font-size: 13px; cursor: default;
+}
+.dp-footer { text-align: right; margin-top: 12px; }
+.dp-exit { background: var(--bg); color: var(--fg-muted); }
+
+/* output */
+.err-box {
+  border: 1px solid #e5484d; background: rgba(229, 72, 77, .09);
+  color: var(--fg);
+  border-radius: 8px; padding: 9px 12px; margin-bottom: 10px;
+  font-size: 12px;
+}
+.err-box h3 { margin: 0 0 6px; font-size: 12px; color: #e5484d; }
+.err-item { margin: 3px 0; padding-left: 14px; position: relative; }
+.err-item::before { content: '⚠'; position: absolute; left: 0; }
+.out-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.out-tab {
+  border: 1px solid var(--border); border-radius: 7px;
+  background: var(--btn-bg); color: var(--fg);
+  padding: 4px 10px; font-size: 12px; cursor: pointer;
+}
+.out-tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.out-body {
+  background: var(--code-bg);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 12px; line-height: 1.55;
+  white-space: pre-wrap; word-break: break-all;
+  max-height: 360px; overflow: auto;
+  margin: 0;
+}
+.out-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+.packfield { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-muted); }
+.packfield select, .packfield input { padding: 4px 7px; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg); }
+.packfield input[type="number"] { width: 62px; }
+</style>
+<script>
+(function () {
+  var m = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  document.documentElement.setAttribute('data-theme', m && m.matches ? 'dark' : 'light');
+})();
+</script>
+</head>
+<body>
+<div class="mode-bar" role="tablist" aria-label="编辑模式">
+  <button type="button" class="mode-btn active" id="modeTextBtn">文本组件</button>
+  <button type="button" class="mode-btn" id="modeDialogBtn">Dialog 编辑器</button>
+</div>
+<div class="topbar" id="textTopbar">
+  <div class="topbar-inner">
+    <h1>Minecraft 文本组件生成器<span class="sub">Text Component Generator <a href="../">返回主页</a></span></h1>
+
+    <div class="field-banner hidden" id="fieldEditBanner">
+      <span>正在编辑 Dialog 字段：<b id="fieldEditName"></b></span>
+      <span class="sp"></span>
+      <button type="button" class="btn small" id="fieldEditDone">完成</button>
+      <button type="button" class="btn small" id="fieldEditCancel">取消</button>
+    </div>
+
+    <section class="toolbar" aria-label="工具栏">
+    <div class="group">
+      <span class="group-label">样式</span>
+      <button type="button" class="btn seg-btn" data-style="bold" title="加粗">加粗</button>
+      <button type="button" class="btn seg-btn" data-style="italic" title="斜体">斜体</button>
+      <button type="button" class="btn seg-btn" data-style="underline" title="下划线">下划线</button>
+      <button type="button" class="btn seg-btn" data-style="strikethrough" title="删除线">删除线</button>
+      <button type="button" class="btn seg-btn" data-style="obfuscated" title="乱码（obfuscated）">乱码</button>
+    </div>
+    <div class="group">
+      <span class="group-label">颜色</span>
+      <div class="swatches" id="swatches"></div>
+      <input type="color" id="colorPicker" title="取色器" value="#FFFFFF">
+      <input type="text" id="hexInput" class="hex" placeholder="#FFFFFF" maxlength="7" spellcheck="false" title="输入十六进制颜色">
+    </div>
+    <div class="group">
+      <span class="group-label">点击事件</span>
+      <span class="radios" id="clickAction" title="点击事件动作"></span>
+      <span class="param-label" id="clickParamLabel">command：</span>
+      <input type="text" id="clickValue" class="param-input" spellcheck="false" placeholder="输入 command 的值…">
+      <button type="button" class="btn" id="applyClickBtn">应用到选中文字</button>
+      <button type="button" class="btn" id="clearClickBtn">清除点击事件</button>
+    </div>
+    <div class="group">
+      <span class="group-label">渐变</span>
+      <button type="button" class="btn" id="gradientBtn" title="为选中文字应用从起始到结束的渐变颜色">彩虹渐变</button>
+      <label class="inline-label" for="gradStart">起始</label>
+      <input type="color" id="gradStart" title="渐变起始颜色" value="#FF0000">
+      <label class="inline-label" for="gradEnd">结束</label>
+      <input type="color" id="gradEnd" title="渐变结束颜色" value="#FF00FF">
+    </div>
+  </section>
+
+  <section class="card options-card" id="textOptionsCard" aria-label="输出选项">
+    <div class="options-row">
+      <span class="opt">
+        <input type="radio" name="format" value="single" id="fmtSingle" checked>
+        <label for="fmtSingle">单行</label>
+      </span>
+      <span class="opt">
+        <input type="radio" name="format" value="pretty" id="fmtPretty">
+        <label for="fmtPretty">格式化（缩进）</label>
+      </span>
+      <span class="opt">
+        <input type="checkbox" id="signMode">
+        <label for="signMode">生成告示牌</label>
+      </span>
+      <button type="button" class="btn" id="exportBtn" title="将当前内容导出为 JSON 文件">导出</button>
+      <button type="button" class="btn" id="importBtn" title="从 JSON 文件导入内容">导入</button>
+      <input type="file" id="fileInput" accept=".json,application/json" hidden>
+      <button type="button" class="btn primary" id="generateBtn">生成并复制</button>
+    </div>
+    <div class="options-subrow" id="signOptions">
+      <span class="opt">
+        <input type="radio" name="signOut" value="component" id="signComponent" checked>
+        <label for="signComponent">文本组件</label>
+      </span>
+      <span class="opt">
+        <input type="radio" name="signOut" value="setblock" id="signSetblock">
+        <label for="signSetblock">完整 setblock 命令</label>
+      </span>
+      <span class="opt">
+        <label for="signType">告示牌</label>
+        <select id="signType" title="选择告示牌类型"></select>
+      </span>
+    </div>
+  </section>
+    </div>
+  </div>
+
+<main id="textMain">
+  <section class="card" aria-label="编辑器">
+    <div class="hint hidden" id="signHint">前4行内容将作为告示牌的4行文本</div>
+    <div class="editor">
+      <div class="linenums" id="linenums" aria-hidden="true"></div>
+      <div class="editor-body">
+        <pre class="preview" id="preview" aria-hidden="true" data-placeholder="在此输入文本…"></pre>
+        <textarea class="input" id="input" spellcheck="false" wrap="soft" aria-label="富文本编辑器"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">
+    用鼠标选中文字后，可为选中部分应用样式、颜色或点击事件；没有选中文字时，样式与颜色将应用到光标位置及之后输入的内容。<br>
+    含点击事件的文字会在编辑器中以不断变化的背景色高亮显示。<br>
+    点击「生成并复制」即可将结果直接复制到剪贴板；「导出」可把当前内容保存为 JSON 文件，之后「导入」即可继续编辑，关闭网页也不丢失。
+  </p>
+</main>
+
+<div class="topbar" id="dialogTopbar" hidden>
+  <div class="topbar-inner">
+    <h1>Minecraft Dialog 编辑器<span class="sub">Dialog Editor · Java 1.21.6 <a href="../">返回主页</a></span></h1>
+    <section class="toolbar">
+      <div class="group">
+        <span class="group-label">模板</span>
+        <span class="radios" id="dlgTemplate" title="载入示例模板">
+          <label class="fcheck"><input type="radio" name="dlgTemplateRadios" value="blank" checked><span>空白 Dialog</span></label>
+          <label class="fcheck"><input type="radio" name="dlgTemplateRadios" value="task"><span>任务确认</span></label>
+          <label class="fcheck"><input type="radio" name="dlgTemplateRadios" value="char"><span>角色创建</span></label>
+        </span>
+      </div>
+      <div class="group">
+        <span class="group-label">文件</span>
+        <button type="button" class="btn" id="dlgExportBtn" title="导出当前 Dialog 为 JSON 文件">导出 JSON</button>
+        <button type="button" class="btn" id="dlgImportBtn" title="从 JSON 文件导入 Dialog">导入 JSON</button>
+        <input type="file" id="dlgFileInput" accept=".json,application/json" hidden>
+        <button type="button" class="btn" id="dlgPackBtn" title="导出为数据包 zip（pack.mcmeta + data/&lt;命名空间&gt;/dialog/&lt;id&gt;.json）">导出数据包</button>
+      </div>
+      <div class="group">
+        <span class="group-label">说明</span>
+        <span class="inline-label">/dialog show &lt;目标&gt; &lt;dialog&gt; · /dialog clear &lt;目标&gt;</span>
+      </div>
+    </section>
+  </div>
+</div>
+
+<main id="dialogMain" hidden>
+  <div class="dlg-layout">
+    <aside class="dlg-nav" id="dlgNav" aria-label="Dialog 结构"></aside>
+    <section class="dlg-detail" id="dlgDetail" aria-label="字段编辑器"></section>
+  </div>
+
+  <section class="card dlg-preview-card" aria-label="Dialog 预览">
+    <div class="sec-head"><h2>实时预览</h2><span class="inline-label">视觉模拟，非游戏内截图</span></div>
+    <div class="dlg-preview" id="dlgPreview"></div>
+  </section>
+
+  <section class="card dlg-output-card" aria-label="生成结果">
+    <div class="sec-head"><h2>生成结果</h2></div>
+    <div class="err-box hidden" id="dlgErrors"></div>
+    <div class="out-tabs" id="dlgOutTabs"></div>
+    <pre class="out-body" id="dlgOutput"></pre>
+    <div class="out-actions">
+      <button type="button" class="btn primary" id="dlgCopyBtn">复制当前输出</button>
+      <span class="packfield">目标
+        <span class="radios" id="dlgTarget" title="dialog 命令的目标选择器">
+          <label class="fcheck"><input type="radio" name="dlgTargetRadios" value="@p"><span>@p</span></label>
+          <label class="fcheck"><input type="radio" name="dlgTargetRadios" value="@a"><span>@a</span></label>
+          <label class="fcheck"><input type="radio" name="dlgTargetRadios" value="@r"><span>@r</span></label>
+          <label class="fcheck"><input type="radio" name="dlgTargetRadios" value="@s" checked><span>@s</span></label>
+        </span>
+      </span>
+      <span class="packfield">pack_format <input type="number" id="dlgPackFormat" value="80" min="1" title="数据包版本号（1.21.6 为 80）"></span>
+      <span class="inline-label">1.21.6 数据包 pack_format = 80</span>
+    </div>
+  </section>
+
+  <p class="foot">
+    Dialog 是 Minecraft Java 版 1.21.6 的数据驱动界面系统。所有文本类字段（标题、正文、按钮 label 等）都会复用左侧「文本组件」编辑器，点击字段旁的「编辑…」即可打开。<br>
+    数据包文件放在 <span class="code">data/&lt;命名空间&gt;/dialog/&lt;id&gt;.json</span>，用 <span class="code">/dialog show @s 命名空间:id</span> 打开，<span class="code">/dialog clear @s</span> 关闭。生成的是标准 JSON（引号键），可直接放入数据包。不同版本对实验性内容开关的要求可能不同。
+  </p>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+'use strict';
+
+var DEFAULT_COLOR = '#FFFFFF';
+
+var CLICK_ACTIONS = {
+  run_command:       { label: 'run_command（执行命令）',   short: 'run_command', param: 'command' },
+  open_url:          { label: 'open_url（打开链接）',      short: 'open_url', param: 'url' },
+  copy_to_clipboard: { label: 'copy_to_clipboard（复制）', short: 'copy', param: 'value' },
+  show_dialog:       { label: 'show_dialog（显示对话框）', short: 'show_dialog', param: 'dialog' }
+};
+
+var PRESET_COLORS = [
+  ['#AA0000', '暗红'], ['#FF5555', '红'], ['#FFAA00', '金'], ['#FFFF55', '黄'],
+  ['#00AA00', '暗绿'], ['#55FF55', '绿'], ['#00AAAA', '深青'], ['#55FFFF', '青'],
+  ['#0000AA', '暗蓝'], ['#5555FF', '蓝'], ['#AA00AA', '紫'], ['#FF55FF', '粉'],
+  ['#FFFFFF', '白'], ['#AAAAAA', '灰'], ['#555555', '深灰'], ['#000000', '黑']
+];
+
+var SIGN_TYPES = [
+  ['oak_sign', '橡木告示牌'],
+  ['spruce_sign', '云杉木告示牌'],
+  ['birch_sign', '白桦木告示牌'],
+  ['jungle_sign', '丛林木告示牌'],
+  ['acacia_sign', '金合欢木告示牌'],
+  ['dark_oak_sign', '深色橡木告示牌'],
+  ['mangrove_sign', '红树木告示牌'],
+  ['cherry_sign', '樱花木告示牌'],
+  ['pale_oak_sign', '苍白橡木告示牌'],
+  ['bamboo_sign', '竹告示牌'],
+  ['poplar_sign', '杨木告示牌'],
+  ['crimson_sign', '绯红木告示牌'],
+  ['warped_sign', '诡异木告示牌'],
+  ['oak_wall_sign', '墙上的橡木告示牌'],
+  ['spruce_wall_sign', '墙上的云杉木告示牌'],
+  ['birch_wall_sign', '墙上的白桦木告示牌'],
+  ['jungle_wall_sign', '墙上的丛林木告示牌'],
+  ['acacia_wall_sign', '墙上的金合欢木告示牌'],
+  ['dark_oak_wall_sign', '墙上的深色橡木告示牌'],
+  ['mangrove_wall_sign', '墙上的红树木告示牌'],
+  ['cherry_wall_sign', '墙上的樱花木告示牌'],
+  ['pale_oak_wall_sign', '墙上的苍白橡木告示牌'],
+  ['bamboo_wall_sign', '墙上的竹告示牌'],
+  ['poplar_wall_sign', '墙上的杨木告示牌'],
+  ['crimson_wall_sign', '墙上的绯红木告示牌'],
+  ['warped_wall_sign', '墙上的诡异木告示牌']
+];
+
+// ---- element refs ----
+var input = document.getElementById('input');
+var preview = document.getElementById('preview');
+var linenums = document.getElementById('linenums');
+var generateBtn = document.getElementById('generateBtn');
+var exportBtn = document.getElementById('exportBtn');
+var importBtn = document.getElementById('importBtn');
+var fileInput = document.getElementById('fileInput');
+var signMode = document.getElementById('signMode');
+var signHint = document.getElementById('signHint');
+var signOptions = document.getElementById('signOptions');
+var signType = document.getElementById('signType');
+var signOutRadios = document.querySelectorAll('input[name="signOut"]');
+var gradientBtn = document.getElementById('gradientBtn');
+var gradStart = document.getElementById('gradStart');
+var gradEnd = document.getElementById('gradEnd');
+var formatRadios = document.querySelectorAll('input[name="format"]');
+var clickAction = document.getElementById('clickAction');
+var clickValue = document.getElementById('clickValue');
+var clickParamLabel = document.getElementById('clickParamLabel');
+var applyClickBtn = document.getElementById('applyClickBtn');
+var clearClickBtn = document.getElementById('clearClickBtn');
+var colorPicker = document.getElementById('colorPicker');
+var hexInput = document.getElementById('hexInput');
+var styleBtns = document.querySelectorAll('[data-style]');
+var swatchesWrap = document.getElementById('swatches');
+var toast = document.getElementById('toast');
+
+// ---- model ----
+var segments = [blankSegment()];
+var typingStyle = blankStyle();
+var lastCaretPos = -1;
+var toastTimer = null;
+
+function blankStyle() {
+  return { color: DEFAULT_COLOR, bold: false, italic: false, underline: false, strikethrough: false, obfuscated: false, click: null };
+}
+function blankSegment() {
+  var s = blankStyle();
+  s.text = '';
+  return s;
+}
+function cloneStyle(s) {
+  return {
+    color: s.color, bold: s.bold, italic: s.italic,
+    underline: s.underline, strikethrough: s.strikethrough, obfuscated: s.obfuscated,
+    click: s.click ? { action: s.click.action, value: s.click.value } : null
+  };
+}
+function cloneSegment(s, overrides) {
+  var c = cloneStyle(s);
+  c.text = s.text;
+  if (overrides) { for (var k in overrides) c[k] = overrides[k]; }
+  return c;
+}
+
+function fullText() {
+  var t = '';
+  for (var i = 0; i < segments.length; i++) t += segments[i].text;
+  return t;
+}
+function locate(pos) {
+  var acc = 0;
+  for (var i = 0; i < segments.length; i++) {
+    var len = segments[i].text.length;
+    if (pos < acc + len) return { i: i, off: pos - acc };
+    acc += len;
+  }
+  var last = segments.length - 1;
+  if (last < 0) return { i: 0, off: 0 };
+  return { i: last, off: segments[last].text.length };
+}
+function splitAtPos(pos) {
+  var total = fullText().length;
+  if (pos <= 0 || pos >= total) return;
+  var r = locate(pos);
+  var seg = segments[r.i];
+  if (r.off <= 0 || r.off >= seg.text.length) return;
+  var right = cloneSegment(seg, { text: seg.text.slice(r.off) });
+  seg.text = seg.text.slice(0, r.off);
+  segments.splice(r.i + 1, 0, right);
+}
+function firstIndexAtOrAfter(pos) {
+  var total = fullText().length;
+  if (pos >= total) return segments.length;
+  if (pos <= 0) return 0;
+  return locate(pos).i;
+}
+
+function applyEdit(newText) {
+  var oldText = fullText();
+  if (oldText === newText) return;
+  if (segments.length === 0) segments = [blankSegment()];
+
+  var min = Math.min(oldText.length, newText.length);
+  var i = 0;
+  while (i < min && oldText[i] === newText[i]) i++;
+  var j = 0;
+  while (j < oldText.length - i && j < newText.length - i &&
+         oldText[oldText.length - 1 - j] === newText[newText.length - 1 - j]) j++;
+  var start = i;
+  var oldEnd = oldText.length - j;
+  var newEnd = newText.length - j;
+  var inserted = newText.slice(start, newEnd);
+
+  var style = cloneStyle(typingStyle);
+
+  if (oldText.length === 0) {
+    segments = [Object.assign(blankSegment(), style, { text: inserted })];
+    lastCaretPos = input.selectionStart;
+    return;
+  }
+
+  splitAtPos(start);
+  splitAtPos(oldEnd);
+
+  var a = firstIndexAtOrAfter(start);
+  var b = firstIndexAtOrAfter(oldEnd);
+  var prefix = segments.slice(0, a);
+  var suffix = segments.slice(b);
+  var newSegs = prefix.slice();
+  if (inserted !== '' || (prefix.length === 0 && suffix.length === 0)) {
+    newSegs.push(Object.assign(blankSegment(), style, { text: inserted }));
+  }
+  segments = newSegs.concat(suffix);
+  mergeAdjacent();
+  lastCaretPos = input.selectionStart;
+}
+
+// 合并相邻且样式完全相同的文本段，避免逐字输入时产生多余的分段
+function sameStyle(a, b) {
+  if (a.color !== b.color || a.bold !== b.bold || a.italic !== b.italic ||
+      a.underline !== b.underline || a.strikethrough !== b.strikethrough ||
+      a.obfuscated !== b.obfuscated) return false;
+  if (a.click === null || b.click === null) return a.click === b.click;
+  return a.click.action === b.click.action && a.click.value === b.click.value;
+}
+function mergeAdjacent() {
+  if (segments.length < 2) return;
+  var out = [];
+  for (var i = 0; i < segments.length; i++) {
+    var last = out[out.length - 1];
+    var cur = segments[i];
+    if (last && sameStyle(last, cur)) {
+      last.text += cur.text;
+    } else {
+      out.push(cur);
+    }
+  }
+  segments = out;
+}
+
+// ---- selection / style application ----
+function applyToRange(start, end, fn) {
+  splitAtPos(start);
+  splitAtPos(end);
+  var a = firstIndexAtOrAfter(start);
+  var b = firstIndexAtOrAfter(end);
+  for (var k = a; k < b; k++) fn(segments[k]);
+}
+function commit() {
+  mergeAdjacent();
+  renderPreview();
+  updateOutput();
+  updateToolbarState();
+}
+function toggleStyle(prop) {
+  var start = input.selectionStart, end = input.selectionEnd;
+  var target;
+  if (start === end) {
+    target = !typingStyle[prop];
+    typingStyle[prop] = target;
+  } else {
+    applyToRange(start, end, function (seg) {
+      if (target === undefined) target = !seg[prop];
+      seg[prop] = target;
+    });
+    typingStyle[prop] = target;
+  }
+  lastCaretPos = start;
+  commit();
+}
+function setColor(hex) {
+  var norm = normalizeHex(hex);
+  if (!norm) return;
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) {
+    typingStyle.color = norm;
+  } else {
+    applyToRange(start, end, function (seg) { seg.color = norm; });
+    typingStyle.color = norm;
+  }
+  lastCaretPos = start;
+  commit();
+}
+function applyClickEvent() {
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) { showToast('请先选中要添加点击事件的文字'); return; }
+  var action = currentClickAction(), value = clickValue.value;
+  applyToRange(start, end, function (seg) { seg.click = { action: action, value: value }; });
+  commit();
+  showToast('已添加点击事件');
+}
+function clearClickEvent() {
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) { showToast('请先选中要清除点击事件的文字'); return; }
+  applyToRange(start, end, function (seg) { seg.click = null; });
+  commit();
+  showToast('已清除点击事件');
+}
+
+// ---- 彩虹渐变 ----
+function rgbToHex(r, g, b) {
+  function cv(v) {
+    v = Math.max(0, Math.min(255, Math.round(v)));
+    return (v < 16 ? '0' : '') + v.toString(16).toUpperCase();
+  }
+  return '#' + cv(r) + cv(g) + cv(b);
+}
+function hexToRgb(hex) {
+  var h = (hex || '#FFFFFF').replace('#', '');
+  return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+}
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  var max = Math.max(r, g, b), min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
+  if (max === min) { h = 0; s = 0; }
+  else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h /= 6;
+  }
+  return { h: h, s: s, l: l };
+}
+function hslToRgb(h, s, l) {
+  var r, g, b;
+  if (s === 0) { r = g = b = l; }
+  else {
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+    function h2(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
+    r = h2(p, q, h + 1 / 3);
+    g = h2(p, q, h);
+    b = h2(p, q, h - 1 / 3);
+  }
+  return { r: r * 255, g: g * 255, b: b * 255 };
+}
+function gradientColors(startHex, endHex, steps) {
+  var colors = [];
+  if (steps <= 0) return colors;
+  var sr = hexToRgb(startHex), er = hexToRgb(endHex);
+  var s = rgbToHsl(sr.r, sr.g, sr.b);
+  var e = rgbToHsl(er.r, er.g, er.b);
+  for (var i = 0; i < steps; i++) {
+    var t = steps === 1 ? 0 : i / (steps - 1);
+    var h = s.h + (e.h - s.h) * t;
+    var sl = s.s + (e.s - s.s) * t;
+    var l = s.l + (e.l - s.l) * t;
+    var rgb = hslToRgb(((h % 1) + 1) % 1, sl, l);
+    colors.push(rgbToHex(rgb.r, rgb.g, rgb.b));
+  }
+  return colors;
+}
+function applyGradient() {
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) { showToast('请先选中要应用渐变颜色的文字'); return; }
+  var cols = gradientColors(gradStart.value, gradEnd.value, end - start);
+  splitAtPos(start);
+  splitAtPos(end);
+  var a = firstIndexAtOrAfter(start);
+  var b = firstIndexAtOrAfter(end);
+  var prefix = segments.slice(0, a);
+  var suffix = segments.slice(b);
+  var middle = [];
+  var pos = start;
+  for (var k = a; k < b; k++) {
+    var seg = segments[k];
+    for (var ci = 0; ci < seg.text.length; ci++) {
+      middle.push(cloneSegment(seg, { text: seg.text[ci], color: cols[pos - start] }));
+      pos++;
+    }
+  }
+  segments = prefix.concat(middle).concat(suffix);
+  if (middle.length) typingStyle = cloneStyle(middle[middle.length - 1]);
+  commit();
+  showToast('已应用渐变颜色');
+}
+
+// ---- caret / toolbar state ----
+function caretSegment() {
+  var total = fullText().length;
+  if (total === 0) return segments[0] || blankSegment();
+  var pos = input.selectionStart;
+  if (pos >= total) pos = total - 1;
+  return segments[locate(pos).i];
+}
+function reflectedStyle() {
+  var start = input.selectionStart, end = input.selectionEnd;
+  if (start === end) return typingStyle;
+  var total = fullText().length;
+  if (total === 0) return typingStyle;
+  var p = start >= total ? total - 1 : start;
+  return segments[locate(p).i];
+}
+function refreshTypingStyle() {
+  var pos = input.selectionStart;
+  if (pos === lastCaretPos) return;
+  lastCaretPos = pos;
+  typingStyle = cloneStyle(caretSegment());
+}
+function updateToolbarState() {
+  var seg = reflectedStyle();
+  styleBtns.forEach(function (b) { b.classList.toggle('active', !!seg[b.getAttribute('data-style')]); });
+  var c = (seg.color || DEFAULT_COLOR).toUpperCase();
+  colorPicker.value = c;
+  hexInput.value = c;
+  var sw = swatchesWrap.querySelectorAll('.swatch');
+  for (var i = 0; i < sw.length; i++) {
+    sw[i].classList.toggle('active', sw[i].getAttribute('data-color').toUpperCase() === c);
+  }
+}
+
+// ---- rendering ----
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function isLightColor(hex) {
+  var h = (hex || '#FFFFFF').replace('#', '');
+  var r = parseInt(h.slice(0, 2), 16);
+  var g = parseInt(h.slice(2, 4), 16);
+  var b = parseInt(h.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 195;
+}
+function renderPreview() {
+  if (segments.length === 0) segments = [blankSegment()];
+  preview.classList.toggle('empty', fullText().length === 0);
+  var light = document.documentElement.getAttribute('data-theme') !== 'dark';
+  var parts = [];
+  for (var i = 0; i < segments.length; i++) {
+    var seg = segments[i];
+    var col = seg.color || DEFAULT_COLOR;
+    var p = [];
+    p.push('color:' + col);
+    p.push('font-weight:' + (seg.bold ? '700' : '400'));
+    p.push('font-style:' + (seg.italic ? 'italic' : 'normal'));
+    var deco = [];
+    if (seg.underline) deco.push('underline');
+    if (seg.strikethrough) deco.push('line-through');
+    p.push('text-decoration:' + (deco.join(' ') || 'none'));
+    var cls = 'seg';
+    if (seg.click) cls += ' has-click';
+    if (light && isLightColor(col)) cls += ' needs-outline';
+    parts.push('<span class="' + cls + '" style="' + p.join(';') + '">' + escapeHtml(seg.text) + '</span>');
+  }
+  preview.innerHTML = parts.join('');
+  updateLineNumbers();
+}
+
+// ---- output generation ----
+function normalizeHex(s) {
+  if (!s) return null;
+  var h = String(s).trim().replace(/^#/, '');
+  if (/^[0-9a-fA-F]{3}$/.test(h)) h = h.split('').map(function (c) { return c + c; }).join('');
+  if (/^[0-9a-fA-F]{6}$/.test(h)) return '#' + h.toUpperCase();
+  return null;
+}
+function segToObj(seg) {
+  var o = { text: seg.text };
+  var col = (seg.color || DEFAULT_COLOR).toUpperCase();
+  if (col !== DEFAULT_COLOR) o.color = col;
+  o.italic = !!seg.italic;
+  if (seg.bold) o.bold = true;
+  if (seg.underline) o.underline = true;
+  if (seg.strikethrough) o.strikethrough = true;
+  if (seg.obfuscated) o.obfuscated = true;
+  if (seg.click) {
+    var info = CLICK_ACTIONS[seg.click.action];
+    var param = info ? info.param : 'value';
+    o.click_event = { action: seg.click.action };
+    o.click_event[param] = seg.click.value;
+  }
+  return o;
+}
+function componentOf(segs) {
+  var list = [];
+  for (var i = 0; i < segs.length; i++) {
+    var o = segToObj(segs[i]);
+    if (o.text !== '') list.push(o);
+  }
+  if (list.length === 0) return { text: '' };
+  return list.length === 1 ? list[0] : list;
+}
+function splitIntoLines(segs, count) {
+  var lines = [];
+  for (var i = 0; i < count; i++) lines.push([]);
+  var lineIdx = 0;
+  for (var i = 0; i < segs.length; i++) {
+    if (lineIdx >= count) break;
+    var seg = segs[i];
+    var parts = seg.text.split('\n');
+    lines[lineIdx].push(cloneSegment(seg, { text: parts[0] }));
+    for (var k = 1; k < parts.length; k++) {
+      lineIdx++;
+      if (lineIdx >= count) break;
+      lines[lineIdx].push(cloneSegment(seg, { text: parts[k] }));
+    }
+  }
+  return lines;
+}
+function getSignOut() {
+  for (var i = 0; i < signOutRadios.length; i++) if (signOutRadios[i].checked) return signOutRadios[i].value;
+  return 'component';
+}
+function getFormat() {
+  for (var i = 0; i < formatRadios.length; i++) if (formatRadios[i].checked) return formatRadios[i].value;
+  return 'single';
+}
+// Minecraft 的命令 JSON 解析器允许不带引号的键名，
+// 这里用自定义序列化器输出 {text:"1",bold:false,color:"#FF0000"} 这种风格。
+function mcStringify(v) {
+  if (v === null) return 'null';
+  var t = typeof v;
+  if (t === 'string') return JSON.stringify(v);
+  if (t === 'boolean' || t === 'number') return String(v);
+  if (Array.isArray(v)) {
+    var a = [];
+    for (var i = 0; i < v.length; i++) a.push(mcStringify(v[i]));
+    return '[' + a.join(',') + ']';
+  }
+  var parts = [];
+  for (var k in v) {
+    if (Object.prototype.hasOwnProperty.call(v, k)) parts.push(k + ':' + mcStringify(v[k]));
+  }
+  return '{' + parts.join(',') + '}';
+}
+function pad(n) { return n > 0 ? new Array(n + 1).join('  ') : ''; }
+function mcStringifyPretty(v, depth) {
+  depth = depth || 0;
+  if (v === null) return 'null';
+  var t = typeof v;
+  if (t === 'string') return JSON.stringify(v);
+  if (t === 'boolean' || t === 'number') return String(v);
+  if (Array.isArray(v)) {
+    if (v.length === 0) return '[]';
+    var a = [];
+    for (var i = 0; i < v.length; i++) a.push(pad(depth + 1) + mcStringifyPretty(v[i], depth + 1));
+    return '[\n' + a.join(',\n') + '\n' + pad(depth) + ']';
+  }
+  var parts = [];
+  for (var k in v) {
+    if (Object.prototype.hasOwnProperty.call(v, k)) parts.push(pad(depth + 1) + k + ': ' + mcStringifyPretty(v[k], depth + 1));
+  }
+  if (parts.length === 0) return '{}';
+  return '{\n' + parts.join(',\n') + '\n' + pad(depth) + '}';
+}
+function buildOutput() {
+  if (signMode.checked) {
+    var lines = splitIntoLines(segments, 4);
+    var messages = [];
+    for (var i = 0; i < 4; i++) messages.push(componentOf(lines[i]));
+    var data = { front_text: { messages: messages } };
+    if (getSignOut() === 'setblock') {
+      return '/setblock ~ ~ ~ ' + (signType.value || 'oak_sign') + '[]' + mcStringify(data);
+    }
+    return getFormat() === 'pretty' ? mcStringifyPretty(data) : mcStringify(data);
+  }
+  var comp = componentOf(segments);
+  return getFormat() === 'pretty' ? mcStringifyPretty(comp) : mcStringify(comp);
+}
+function updateOutput() { /* 结果预览已移除，生成结果由「生成并复制」直接复制 */ }
+function generate() {
+  return buildOutput();
+}
+function updateLineNumbers() {
+  if (!linenums) return;
+  var n = fullText().split('\n').length;
+  var parts = [];
+  for (var i = 1; i <= n; i++) parts.push(String(i));
+  linenums.textContent = parts.join('\n');
+}
+
+// ---- clipboard ----
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text).then(function () { return true; }).catch(function () { return fallbackCopy(text); });
+  }
+  return Promise.resolve(fallbackCopy(text));
+}
+function fallbackCopy(text) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    ta.style.pointerEvents = 'none';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    return ok;
+  } catch (e) { return false; }
+}
+
+// ---- 导出 / 导入 ----
+function buildDocument() {
+  return {
+    version: 1,
+    type: 'mctexteditor-document',
+    segments: segments.map(function (s) {
+      return {
+        text: s.text,
+        color: s.color,
+        bold: s.bold,
+        italic: s.italic,
+        underline: s.underline,
+        strikethrough: s.strikethrough,
+        obfuscated: s.obfuscated,
+        click: s.click ? { action: s.click.action, value: s.click.value } : null
+      };
+    })
+  };
+}
+function exportDocument() {
+  var blob = new Blob([JSON.stringify(buildDocument(), null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'mc-text-document.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  showToast('已导出');
+}
+function loadDocument(doc) {
+  if (!doc || !Array.isArray(doc.segments)) return false;
+  var segs = [];
+  for (var i = 0; i < doc.segments.length; i++) {
+    var s = doc.segments[i];
+    if (!s || typeof s !== 'object' || typeof s.text !== 'string') continue;
+    if (s.text === '') continue;
+    var ns = blankSegment();
+    ns.text = s.text;
+    ns.color = normalizeHex(s.color) || DEFAULT_COLOR;
+    ns.bold = !!s.bold;
+    ns.italic = !!s.italic;
+    ns.underline = !!s.underline;
+    ns.strikethrough = !!s.strikethrough;
+    ns.obfuscated = !!s.obfuscated;
+    if (s.click && typeof s.click === 'object') {
+      var action = CLICK_ACTIONS[s.click.action] ? s.click.action : 'run_command';
+      ns.click = { action: action, value: String(s.click.value === undefined ? '' : s.click.value) };
+    }
+    segs.push(ns);
+  }
+  if (segs.length === 0) return false;
+  segments = segs;
+  mergeAdjacent();
+  typingStyle = cloneStyle(segments[segments.length - 1]);
+  lastCaretPos = 0;
+  input.value = fullText();
+  input.selectionStart = 0;
+  input.selectionEnd = 0;
+  commit();
+  return true;
+}
+function importDocument() {
+  var file = fileInput.files && fileInput.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      var doc = JSON.parse(e.target.result);
+      if (loadDocument(doc)) showToast('已导入');
+      else showToast('文件格式不正确');
+    } catch (err) {
+      showToast('文件格式不正确');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ---- toast ----
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+}
+
+// ---- events ----
+input.addEventListener('input', function () {
+  applyEdit(input.value);
+  renderPreview();
+  updateOutput();
+  updateToolbarState();
+});
+input.addEventListener('scroll', function () {
+  preview.scrollTop = input.scrollTop;
+  preview.scrollLeft = input.scrollLeft;
+});
+document.addEventListener('selectionchange', function () {
+  if (document.activeElement !== input) return;
+  refreshTypingStyle();
+  updateToolbarState();
+});
+
+styleBtns.forEach(function (b) {
+  b.addEventListener('click', function () { toggleStyle(b.getAttribute('data-style')); });
+});
+gradientBtn.addEventListener('click', applyGradient);
+colorPicker.addEventListener('input', function () { setColor(colorPicker.value); });
+hexInput.addEventListener('input', function () {
+  var hex = normalizeHex(hexInput.value);
+  if (hex) setColor(hex);
+});
+hexInput.addEventListener('blur', function () {
+  hexInput.value = reflectedStyle().color.toUpperCase();
+});
+applyClickBtn.addEventListener('click', applyClickEvent);
+clearClickBtn.addEventListener('click', clearClickEvent);
+
+clickAction.addEventListener('change', function () { updateClickUI(); });
+function updateModeUI() {
+  var sign = signMode.checked;
+  var signSet = sign && getSignOut() === 'setblock';
+  signHint.classList.toggle('hidden', !sign);
+  signOptions.classList.toggle('show', sign);
+  signType.disabled = !signSet;
+  for (var i = 0; i < formatRadios.length; i++) formatRadios[i].disabled = signSet;
+  updateOutput();
+}
+signMode.addEventListener('change', updateModeUI);
+signOutRadios.forEach(function (r) {
+  r.addEventListener('change', updateModeUI);
+});
+formatRadios.forEach(function (r) {
+  r.addEventListener('change', updateOutput);
+});
+
+generateBtn.addEventListener('click', function () {
+  var out = generate();
+  copyText(out).then(function (ok) {
+    showToast(ok ? '已生成并复制' : '已生成，但复制失败，请手动复制');
+  });
+});
+exportBtn.addEventListener('click', exportDocument);
+importBtn.addEventListener('click', function () { fileInput.click(); });
+fileInput.addEventListener('change', function () {
+  importDocument();
+  fileInput.value = '';
+});
+
+// ---- theme ----
+function applyTheme(e) {
+  document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+  renderPreview();
+}
+var mq = window.matchMedia('(prefers-color-scheme: dark)');
+if (mq.addEventListener) mq.addEventListener('change', applyTheme);
+else if (mq.addListener) mq.addListener(applyTheme);
+
+// ---- init ----
+function updateClickUI() {
+  var info = CLICK_ACTIONS[currentClickAction()];
+  clickParamLabel.textContent = info.param + '：';
+  clickValue.placeholder = '输入 ' + info.param + ' 的值…';
+}
+function buildSwatches() {
+  for (var i = 0; i < PRESET_COLORS.length; i++) {
+    var hex = PRESET_COLORS[i][0], name = PRESET_COLORS[i][1];
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'swatch';
+    b.setAttribute('data-color', hex);
+    b.title = hex + ' ' + name;
+    b.style.background = hex;
+    (function (h) {
+      b.addEventListener('click', function () { setColor(h); });
+    })(hex);
+    swatchesWrap.appendChild(b);
+  }
+}
+function buildActions() {
+  var first = true;
+  for (var key in CLICK_ACTIONS) {
+    if (!CLICK_ACTIONS.hasOwnProperty(key)) continue;
+    var lab = document.createElement('label');
+    lab.className = 'fcheck';
+    var inp = document.createElement('input');
+    inp.type = 'radio';
+    inp.name = 'clickActionRadios';
+    inp.value = key;
+    if (first) { inp.checked = true; first = false; }
+    var span = document.createElement('span');
+    span.textContent = CLICK_ACTIONS[key].short || key;
+    lab.appendChild(inp);
+    lab.appendChild(span);
+    clickAction.appendChild(lab);
+  }
+}
+function currentClickAction() {
+  var radios = document.querySelectorAll('#clickAction input[type="radio"]');
+  for (var i = 0; i < radios.length; i++) if (radios[i].checked) return radios[i].value;
+  return 'run_command';
+}
+function buildSignTypes() {
+  for (var i = 0; i < SIGN_TYPES.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = SIGN_TYPES[i][0];
+    opt.textContent = SIGN_TYPES[i][1] + '（' + SIGN_TYPES[i][0] + '）';
+    signType.appendChild(opt);
+  }
+}
+
+buildSwatches();
+buildActions();
+buildSignTypes();
+input.value = '';
+renderPreview();
+updateOutput();
+updateToolbarState();
+updateClickUI();
+updateModeUI();
+
+/* ====================================================================
+ * Dialog 编辑器 —— Minecraft Java Edition 1.21.6
+ * 数据格式依据官方 1.21.6 dialog 系统（minecraft:dialog registry / inline value）。
+ * 已核实：dialog 类型 notice/confirmation/multi_action/dialog_list；
+ * body 类型 minecraft:plain_message / minecraft:item；
+ * 输入控件 minecraft:text / boolean / single_option / number_range；
+ * 按钮 action 使用 type 判别字段，静态动作无命名空间、动态动作为
+ * minecraft:dynamic/run_command（template 宏）与 minecraft:dynamic/custom（id+additions）；
+ * after_action = close | none | wait_for_response。
+ * 注意：不要混入旧版 snapshot 字段（on_cancel / simple_input_form / multi_action_input_form）。
+ * ==================================================================== */
+
+var DIALOG_TYPES = [
+  { value: 'minecraft:notice', label: 'minecraft:notice（提示框，单个按钮）' },
+  { value: 'minecraft:confirmation', label: 'minecraft:confirmation（确认框，yes/no）' },
+  { value: 'minecraft:multi_action', label: 'minecraft:multi_action（任意数量按钮）' },
+  { value: 'minecraft:dialog_list', label: 'minecraft:dialog_list（对话框列表）' }
+];
+
+var AFTER_ACTIONS = [
+  { value: 'close', label: 'close（关闭）' },
+  { value: 'none', label: 'none（保持打开）' },
+  { value: 'wait_for_response', label: 'wait_for_response（等待响应）' }
+];
+
+var DIALOG_ACTIONS = [
+  { value: 'run_command', label: 'run_command（执行命令）' },
+  { value: 'suggest_command', label: 'suggest_command（建议命令）' },
+  { value: 'open_url', label: 'open_url（打开链接）' },
+  { value: 'copy_to_clipboard', label: 'copy_to_clipboard（复制）' },
+  { value: 'change_page', label: 'change_page（翻页）' },
+  { value: 'show_dialog', label: 'show_dialog（打开另一个 Dialog）' },
+  { value: 'minecraft:dynamic/run_command', label: 'dynamic/run_command（宏命令）' },
+  { value: 'minecraft:dynamic/custom', label: 'dynamic/custom（自定义数据）' }
+];
+
+var MC_NAMED_COLORS = {
+  black: '#000000', dark_blue: '#0000AA', dark_green: '#00AA00', dark_aqua: '#00AAAA',
+  dark_red: '#AA0000', dark_purple: '#AA00AA', gold: '#FFAA00', gray: '#AAAAAA',
+  dark_gray: '#555555', blue: '#5555FF', green: '#55FF55', aqua: '#55FFFF',
+  red: '#FF5555', light_purple: '#FF55FF', yellow: '#FFFF55', white: '#FFFFFF',
+  minecoin_gold: '#DDD605'
+};
+
+function mcColorToHex(c, fallback) {
+  if (!c) return fallback || DEFAULT_COLOR;
+  if (c.charAt(0) === '#') return normalizeHex(c) || fallback || DEFAULT_COLOR;
+  return MC_NAMED_COLORS[c] || fallback || DEFAULT_COLOR;
+}
+
+function componentText(comp) {
+  var t = '';
+  (function walk(c) {
+    if (c == null) return;
+    if (typeof c === 'string') { t += c; return; }
+    if (Array.isArray(c)) { for (var i = 0; i < c.length; i++) walk(c[i]); return; }
+    if (typeof c === 'object') {
+      if (c.text !== undefined) t += String(c.text);
+      if (Array.isArray(c.extra)) for (var j = 0; j < c.extra.length; j++) walk(c.extra[j]);
+    }
+  })(comp);
+  return t;
+}
+function isComponentEmpty(comp) { return componentText(comp) === ''; }
+
+function componentToHtml(comp) {
+  var out = '';
+  function st(o) {
+    var p = [];
+    var hex = mcColorToHex(o.color);
+    if (hex) p.push('color:' + hex);
+    if (o.bold) p.push('font-weight:700');
+    if (o.italic) p.push('font-style:italic');
+    var deco = [];
+    if (o.underline) deco.push('underline');
+    if (o.strikethrough) deco.push('line-through');
+    if (deco.length) p.push('text-decoration:' + deco.join(' '));
+    if (o.obfuscated) p.push('opacity:.55');
+    return p.length ? ' style="' + p.join(';') + '"' : '';
+  }
+  (function walk(c) {
+    if (c == null) return;
+    if (typeof c === 'string') { out += escapeHtml(c); return; }
+    if (Array.isArray(c)) { for (var i = 0; i < c.length; i++) walk(c[i]); return; }
+    if (typeof c !== 'object') { out += escapeHtml(String(c)); return; }
+    out += '<span' + st(c) + '>' + escapeHtml(c.text === undefined ? '' : String(c.text)) + '</span>';
+    if (Array.isArray(c.extra)) for (var j = 0; j < c.extra.length; j++) walk(c.extra[j]);
+  })(comp);
+  return out || '<span class="muted">（空）</span>';
+}
+
+function componentToSegments(comp) {
+  var segs = [];
+  function push(text, st) {
+    if (text === '') return;
+    var s = blankSegment();
+    s.text = text;
+    s.color = st.color || DEFAULT_COLOR;
+    s.bold = !!st.bold;
+    s.italic = !!st.italic;
+    s.underline = !!st.underline;
+    s.strikethrough = !!st.strikethrough;
+    s.obfuscated = !!st.obfuscated;
+    if (st.click) s.click = { action: st.click.action, value: st.click.value };
+    segs.push(s);
+  }
+  function walk(c, st) {
+    if (c == null) return;
+    if (typeof c === 'string') { push(c, st); return; }
+    if (Array.isArray(c)) { for (var i = 0; i < c.length; i++) walk(c[i], st); return; }
+    if (typeof c !== 'object') { push(String(c), st); return; }
+    var ns = {
+      color: mcColorToHex(c.color, st.color),
+      bold: c.bold !== undefined ? !!c.bold : !!st.bold,
+      italic: c.italic !== undefined ? !!c.italic : !!st.italic,
+      underline: c.underline !== undefined ? !!c.underline : !!st.underline,
+      strikethrough: c.strikethrough !== undefined ? !!c.strikethrough : !!st.strikethrough,
+      obfuscated: c.obfuscated !== undefined ? !!c.obfuscated : !!st.obfuscated,
+      click: st.click
+    };
+    if (c.click_event) {
+      var ce = c.click_event;
+      var val = ce.url !== undefined ? ce.url : ce.command !== undefined ? ce.command : ce.value !== undefined ? ce.value : ce.dialog !== undefined ? ce.dialog : '';
+      ns.click = { action: ce.action, value: String(val) };
+    }
+    push(c.text, ns);
+    if (Array.isArray(c.extra)) for (var j = 0; j < c.extra.length; j++) walk(c.extra[j], ns);
+  }
+  walk(comp, blankStyle());
+  if (segs.length === 0) segs = [blankSegment()];
+  return segs;
+}
+
+// ---- dialog model ----
+function blankDialogActionButton() {
+  return { label: { text: '' }, tooltip: null, width: 150, action: null }; // 默认不执行任何操作
+}
+function blankDialogAction(type) {
+  type = type || 'run_command';
+  if (type === 'run_command' || type === 'suggest_command') return { type: type, command: '' };
+  if (type === 'open_url') return { type: type, url: '' };
+  if (type === 'copy_to_clipboard') return { type: type, value: '' };
+  if (type === 'change_page') return { type: type, page: 0 };
+  if (type === 'show_dialog') return { type: type, dialog: '' };
+  if (type === 'minecraft:dynamic/run_command') return { type: type, template: '' };
+  if (type === 'minecraft:dynamic/custom') return { type: type, id: '', additions: '' };
+  return { type: type };
+}
+function blankPlainMessageBody() {
+  return { type: 'plain_message', contents: { text: '' }, width: 200 };
+}
+function blankItemBody() {
+  return { type: 'item', item: { id: 'minecraft:diamond', count: 1 }, description: null, show_decorations: true, show_tooltip: true, width: 16, height: 16 };
+}
+function blankTextInput() {
+  return { type: 'text', key: '', label: { text: '' }, width: 200, label_visible: true, initial: '', max_length: 32, multiline: false, max_lines: 4, height: 100 };
+}
+function blankBooleanInput() {
+  return { type: 'boolean', key: '', label: { text: '' }, initial: false, on_true: 'true', on_false: 'false' };
+}
+function blankSingleOptionInput() {
+  return { type: 'single_option', key: '', label: { text: '' }, label_visible: true, width: 200, options: [{ id: 'option_1', display: null, initial: true }] };
+}
+function blankNumberRangeInput() {
+  return { type: 'number_range', key: '', label: { text: '' }, label_format: 'options.generic_value', width: 200, start: 0, end: 100, initial: null, step: null };
+}
+function blankDialogModel() {
+  return {
+    source: 'inline',
+    namespace: 'mypack',
+    id: 'example',
+    type: 'minecraft:notice',
+    title: { text: '' },
+    external_title: null,
+    body: [],
+    inputs: [],
+    can_close_with_escape: true,
+    pause: true,
+    after_action: 'close',
+    columns: 2,
+    button_width: 150,
+    notice_action: blankDialogActionButton(),
+    confirm_yes: blankDialogActionButton(),
+    confirm_no: blankDialogActionButton(),
+    actions: [],
+    dialogs: [],
+    exit_action: null
+  };
+}
+
+var dialogModel = blankDialogModel();
+var dlgView = { kind: 'general' };
+var dlgOutTab = 'json';
+var fieldEditState = null;
+var errBadge = {};
+var packFormat = 80; // 1.21.6 数据包 pack_format
+var dlgPackFormat = null;
+var dlgTargetValue = '@s';
+function currentTarget() { return dlgTargetValue || '@s'; }
+
+function modelGetPath(o, path) {
+  var parts = path.split('.');
+  var cur = o;
+  for (var i = 0; i < parts.length; i++) {
+    if (cur == null) return undefined;
+    cur = cur[parts[i]];
+  }
+  return cur;
+}
+function modelSetPath(o, path, val) {
+  var parts = path.split('.');
+  var cur = o;
+  for (var i = 0; i < parts.length - 1; i++) {
+    if (cur[parts[i]] == null) cur[parts[i]] = {};
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length - 1]] = val;
+}
+function registryId(m) { return (m.namespace || 'mypack') + ':' + (m.id || 'example'); }
+function isValidNamespaceId(s) {
+  if (typeof s !== 'string') return false;
+  var i = s.indexOf(':');
+  var ns = i === -1 ? 'minecraft' : s.slice(0, i);
+  var p = i === -1 ? s : s.slice(i + 1);
+  if (!ns || !p) return false;
+  return /^[a-z0-9_.-]+$/.test(ns) && /^[a-z0-9_./-]+$/.test(p);
+}
+
+// ---- JSON builders (snake_case 输出) ----
+function buildItemStack(it) {
+  var id = (it && it.id ? String(it.id).trim() : '');
+  if (!id) return '';
+  var count = parseInt(it.count, 10);
+  if (count > 1) return { id: id, count: count };
+  return { id: id };
+}
+function buildDialogAction(a) {
+  if (!a || !a.type) return null;
+  var o = {};
+  o.type = a.type;
+  var t = a.type;
+  if (t === 'run_command' || t === 'suggest_command') o.command = a.command;
+  else if (t === 'open_url') o.url = a.url;
+  else if (t === 'copy_to_clipboard') o.value = a.value;
+  else if (t === 'change_page') o.page = typeof a.page === 'number' ? a.page : 0;
+  else if (t === 'show_dialog') o.dialog = a.dialog;
+  else if (t === 'minecraft:dynamic/run_command') o.template = a.template;
+  else if (t === 'minecraft:dynamic/custom') {
+    o.id = a.id;
+    if (a.additions && String(a.additions).trim()) {
+      try {
+        var parsed = JSON.parse(a.additions);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) o.additions = parsed;
+      } catch (e) { /* 交给校验器提示 */ }
+    }
+  }
+  return o;
+}
+function buildActionButton(b) {
+  if (!b) return null;
+  var o = {};
+  o.label = (b.label && typeof b.label === 'object' && !Array.isArray(b.label)) ? b.label : { text: String(b.label || '') };
+  if (b.tooltip && !isComponentEmpty(b.tooltip)) o.tooltip = b.tooltip;
+  if (b.width != null && b.width !== 150) o.width = b.width;
+  var act = buildDialogAction(b.action);
+  if (act) o.action = act;
+  return o;
+}
+function buildDialogBody(m) {
+  if (!m.body.length) return null;
+  var list = [];
+  for (var i = 0; i < m.body.length; i++) {
+    var b = m.body[i];
+    if (b.type === 'plain_message') {
+      var o = { type: 'minecraft:plain_message' };
+      if (!isComponentEmpty(b.contents)) o.contents = b.contents;
+      if (b.width != null && b.width !== 200) o.width = b.width;
+      list.push(o);
+    } else if (b.type === 'item') {
+      var io = { type: 'minecraft:item' };
+      io.item = buildItemStack(b.item);
+      if (b.description && b.description.contents && !isComponentEmpty(b.description.contents)) {
+        var d = { type: 'minecraft:plain_message', contents: b.description.contents };
+        if (b.description.width != null && b.description.width !== 200) d.width = b.description.width;
+        io.description = d;
+      }
+      if (b.show_decorations === false) io.show_decorations = false;
+      if (b.show_tooltip === false) io.show_tooltip = false;
+      if (b.width != null && b.width !== 16) io.width = b.width;
+      if (b.height != null && b.height !== 16) io.height = b.height;
+      list.push(io);
+    }
+  }
+  if (list.length === 1) return list[0];
+  return list;
+}
+function buildDialogInputs(m) {
+  var out = [];
+  for (var i = 0; i < m.inputs.length; i++) {
+    var inp = m.inputs[i];
+    var o = {};
+    o.type = 'minecraft:' + inp.type;
+    o.key = inp.key;
+    if (inp.label && !isComponentEmpty(inp.label)) o.label = inp.label;
+    if (inp.type === 'text') {
+      if (inp.width != null && inp.width !== 200) o.width = inp.width;
+      if (inp.label_visible === false) o.label_visible = false;
+      if (inp.initial) o.initial = inp.initial;
+      if (inp.max_length != null && inp.max_length !== 32) o.max_length = inp.max_length;
+      if (inp.multiline) o.multiline = { max_lines: inp.max_lines, height: inp.height };
+    } else if (inp.type === 'boolean') {
+      if (inp.initial) o.initial = true;
+      if (inp.on_true != null && inp.on_true !== 'true') o.on_true = inp.on_true;
+      if (inp.on_false != null && inp.on_false !== 'false') o.on_false = inp.on_false;
+    } else if (inp.type === 'single_option') {
+      if (inp.label_visible === false) o.label_visible = false;
+      if (inp.width != null && inp.width !== 200) o.width = inp.width;
+      var opts = [];
+      for (var j = 0; j < inp.options.length; j++) {
+        var opt = inp.options[j];
+        var oo = { id: opt.id };
+        if (opt.display && !isComponentEmpty(opt.display)) oo.display = opt.display;
+        if (opt.initial) oo.initial = true;
+        opts.push(oo);
+      }
+      o.options = opts;
+    } else if (inp.type === 'number_range') {
+      if (inp.label_format != null && inp.label_format !== 'options.generic_value') o.label_format = inp.label_format;
+      if (inp.width != null && inp.width !== 200) o.width = inp.width;
+      if (typeof inp.start === 'number') o.start = inp.start;
+      if (typeof inp.end === 'number') o.end = inp.end;
+      if (inp.initial !== null && inp.initial !== undefined && typeof inp.initial === 'number') o.initial = inp.initial;
+      if (inp.step !== null && inp.step !== undefined && typeof inp.step === 'number') o.step = inp.step;
+    }
+    out.push(o);
+  }
+  return out;
+}
+function buildDialogJson(m) {
+  m = m || dialogModel;
+  var out = {};
+  out.type = m.type;
+  if (!isComponentEmpty(m.title)) out.title = m.title;
+  if (m.external_title && !isComponentEmpty(m.external_title)) out.external_title = m.external_title;
+  var body = buildDialogBody(m);
+  if (body) out.body = body;
+  var inputs = buildDialogInputs(m);
+  if (inputs.length) out.inputs = inputs;
+  if (m.after_action && m.after_action !== 'close') out.after_action = m.after_action;
+  if (m.can_close_with_escape === false) out.can_close_with_escape = false;
+  if (m.pause === false) out.pause = false;
+  if (m.type === 'minecraft:notice') {
+    out.action = buildActionButton(m.notice_action);
+  } else if (m.type === 'minecraft:confirmation') {
+    out.yes = buildActionButton(m.confirm_yes);
+    out.no = buildActionButton(m.confirm_no);
+  } else if (m.type === 'minecraft:multi_action') {
+    var acts = [];
+    for (var i = 0; i < m.actions.length; i++) acts.push(buildActionButton(m.actions[i]));
+    out.actions = acts;
+    out.columns = (m.columns >= 1) ? m.columns : 2;
+    out.button_width = (m.button_width >= 1) ? m.button_width : 150;
+    if (m.exit_action) out.exit_action = buildActionButton(m.exit_action);
+  } else if (m.type === 'minecraft:dialog_list') {
+    var dls = [];
+    for (var j = 0; j < m.dialogs.length; j++) dls.push(m.dialogs[j].id);
+    out.dialogs = dls;
+    out.columns = (m.columns >= 1) ? m.columns : 2;
+    out.button_width = (m.button_width >= 1) ? m.button_width : 150;
+    if (m.exit_action) out.exit_action = buildActionButton(m.exit_action);
+  }
+  return out;
+}
+function dialogJsonString(pretty) {
+  var j = buildDialogJson(dialogModel);
+  return pretty ? JSON.stringify(j, null, 2) : JSON.stringify(j);
+}
+function dialogShowCommand() {
+  var target = currentTarget();
+  if (dialogModel.source === 'registry') return '/dialog show ' + target + ' ' + registryId(dialogModel);
+  return '/dialog show ' + target + ' ' + JSON.stringify(buildDialogJson(dialogModel));
+}
+function dialogClearCommand() {
+  return '/dialog clear ' + currentTarget();
+}
+
+// ---- validator ----
+function collectButtons(m) {
+  var btns = [];
+  if (m.type === 'minecraft:notice') btns.push({ which: '主按钮', button: m.notice_action });
+  else if (m.type === 'minecraft:confirmation') {
+    btns.push({ which: '确认按钮（yes）', button: m.confirm_yes });
+    btns.push({ which: '取消按钮（no）', button: m.confirm_no });
+  } else if (m.type === 'minecraft:multi_action') {
+    for (var i = 0; i < m.actions.length; i++) btns.push({ which: '按钮 ' + (i + 1), button: m.actions[i] });
+  }
+  return btns;
+}
+function checkDialogAction(a, which, m, err) {
+  if (!a || !a.type) return;
+  if (a.type === 'minecraft:dynamic/run_command') {
+    var tmpl = a.template || '';
+    var re = /\$\(([A-Za-z0-9_]+)\)/g;
+    var used = {};
+    var mm;
+    while ((mm = re.exec(tmpl)) !== null) used[mm[1]] = true;
+    var keys = {};
+    for (var i = 0; i < m.inputs.length; i++) keys[m.inputs[i].key] = true;
+    for (var u in used) {
+      if (!keys[u]) err(which + ' 的宏模板引用了不存在的输入变量 $(' + u + ')。', 'actions');
+    }
+  } else if (a.type === 'minecraft:dynamic/custom') {
+    if (!isValidNamespaceId(a.id || '')) err(which + ' 的 dynamic/custom id「' + (a.id || '') + '」不是合法的命名空间 ID。', 'actions');
+    if (a.additions && String(a.additions).trim()) {
+      try {
+        var parsed = JSON.parse(a.additions);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) err(which + ' 的 additions 必须是 JSON 对象。', 'actions');
+      } catch (e) { err(which + ' 的 additions 不是合法的 JSON。', 'actions'); }
+    }
+  }
+}
+function validateDialog(m) {
+  m = m || dialogModel;
+  var errors = [];
+  function err(msg, group) { errors.push({ message: msg, group: group }); }
+  var seen = {};
+  for (var i = 0; i < m.inputs.length; i++) {
+    var inp = m.inputs[i];
+    var key = inp.key || '';
+    var g = 'inputs';
+    if (!/^[A-Za-z0-9_]+$/.test(key)) err('输入控件 #' + (i + 1) + ' 的 key「' + (key || '(空)') + '」不合法：仅允许字母、数字、下划线。', g);
+    else if (seen[key]) err('输入控件 key「' + key + '」重复。', g);
+    seen[key] = true;
+    if (inp.label && isComponentEmpty(inp.label)) err('输入控件「' + (key || '#' + (i + 1)) + '」缺少 label。', g);
+    if (inp.type === 'text') {
+      if (!(inp.width >= 1 && inp.width <= 1024)) err('文本输入「' + key + '」width 必须在 1~1024。', g);
+      if (!(inp.max_length >= 1)) err('文本输入「' + key + '」max_length 必须为正整数。', g);
+      if (inp.multiline) {
+        if (!(inp.max_lines >= 1)) err('文本输入「' + key + '」multiline.max_lines 必须为正整数。', g);
+        if (!(inp.height >= 1 && inp.height <= 512)) err('文本输入「' + key + '」multiline.height 必须在 1~512。', g);
+      }
+    } else if (inp.type === 'single_option') {
+      if (!inp.options.length) err('选项输入「' + key + '」options 不能为空。', g);
+      var initCount = 0;
+      for (var j = 0; j < inp.options.length; j++) {
+        if (inp.options[j].initial) initCount++;
+        if (!/^[A-Za-z0-9_.-]+$/.test(inp.options[j].id || '')) err('选项输入「' + key + '」选项 id「' + (inp.options[j].id || '') + '」不合法。', g);
+      }
+      if (initCount > 1) err('选项输入「' + key + '」最多只能有一个选项 initial=true。', g);
+      if (!(inp.width >= 1 && inp.width <= 1024)) err('选项输入「' + key + '」width 必须在 1~1024。', g);
+    } else if (inp.type === 'number_range') {
+      if (!(inp.width >= 1 && inp.width <= 1024)) err('数值输入「' + key + '」width 必须在 1~1024。', g);
+      var s = inp.start, e = inp.end;
+      if (typeof s !== 'number' || typeof e !== 'number' || !(s <= e)) err('数值输入「' + key + '」start 必须 ≤ end。', g);
+      if (inp.initial !== null && inp.initial !== undefined && typeof inp.initial === 'number' && (inp.initial < s || inp.initial > e)) err('数值输入「' + key + '」initial 必须在 start~end 之间。', g);
+      if (inp.step !== null && inp.step !== undefined && !(inp.step > 0)) err('数值输入「' + key + '」step 必须为正数。', g);
+    }
+  }
+  for (var bi = 0; bi < m.body.length; bi++) {
+    var b = m.body[bi];
+    if (b.type === 'plain_message') {
+      if (!(b.width >= 1 && b.width <= 1024)) err('正文 plain_message #' + (bi + 1) + ' width 必须在 1~1024。', 'body');
+    } else if (b.type === 'item') {
+      if (!(b.width >= 1 && b.width <= 256)) err('正文 item #' + (bi + 1) + ' width 必须在 1~256。', 'body');
+      if (!(b.height >= 1 && b.height <= 256)) err('正文 item #' + (bi + 1) + ' height 必须在 1~256。', 'body');
+      if (!isValidNamespaceId(b.item.id || '')) err('正文 item #' + (bi + 1) + ' item ID「' + (b.item.id || '') + '」不是合法的命名空间 ID。', 'body');
+      if (b.description && b.description.width && !(b.description.width >= 1 && b.description.width <= 1024)) err('正文 item #' + (bi + 1) + ' description width 必须在 1~1024。', 'body');
+    }
+  }
+  if (m.type === 'minecraft:notice') {
+    if (isComponentEmpty(m.notice_action.label)) err('notice 需要配置主按钮 label。', 'actions');
+  } else if (m.type === 'minecraft:confirmation') {
+    if (isComponentEmpty(m.confirm_yes.label)) err('confirmation 需要配置确认按钮（yes）label。', 'actions');
+    if (isComponentEmpty(m.confirm_no.label)) err('confirmation 需要配置取消按钮（no）label。', 'actions');
+  } else if (m.type === 'minecraft:multi_action') {
+    if (!m.actions.length) err('multi_action 的 actions 不能为空。', 'actions');
+    if (!(m.columns >= 1 && Math.floor(m.columns) === m.columns)) err('columns 必须为正整数。', 'general');
+    if (!(m.button_width >= 1 && m.button_width <= 1024)) err('button_width 必须在 1~1024。', 'general');
+  } else if (m.type === 'minecraft:dialog_list') {
+    if (!m.dialogs.length) err('dialog_list 的 dialogs 不能为空。', 'actions');
+    for (var di = 0; di < m.dialogs.length; di++) {
+      if (!isValidNamespaceId(m.dialogs[di].id)) err('dialog_list 中的「' + (m.dialogs[di].id || '') + '」不是合法的命名空间 ID。', 'actions');
+    }
+    if (!(m.columns >= 1 && Math.floor(m.columns) === m.columns)) err('columns 必须为正整数。', 'general');
+    if (!(m.button_width >= 1 && m.button_width <= 1024)) err('button_width 必须在 1~1024。', 'general');
+  }
+  var btns = collectButtons(m);
+  for (var k = 0; k < btns.length; k++) {
+    var btn = btns[k];
+    if (isComponentEmpty(btn.button.label)) err(btn.which + ' 缺少 label。', 'actions');
+    if (btn.button.width != null && !(btn.button.width >= 1 && btn.button.width <= 1024)) err(btn.which + ' width 必须在 1~1024。', 'actions');
+    checkDialogAction(btn.button.action, btn.which, m, err);
+  }
+  if (m.exit_action) {
+    if (isComponentEmpty(m.exit_action.label)) err('exit_action 缺少 label。', 'actions');
+    if (m.exit_action.width != null && !(m.exit_action.width >= 1 && m.exit_action.width <= 1024)) err('exit_action width 必须在 1~1024。', 'actions');
+    checkDialogAction(m.exit_action.action, 'exit_action', m, err);
+  }
+  if (m.legacy && m.legacy.length) err('导入的数据包含旧版字段：' + m.legacy.join('、') + '（已忽略，不会导出）。', 'general');
+  return errors;
+}
+
+// ---- UI helpers ----
+function escAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function radioGroup(bind, val, options, opts) {
+  opts = opts || {};
+  var name = opts.name || 'rg_' + bind.replace(/[^A-Za-z0-9_]/g, '_');
+  var h = '<div class="radios' + (opts.col ? ' col' : '') + '">';
+  for (var i = 0; i < options.length; i++) {
+    var o = options[i];
+    h += '<label class="fcheck"><input type="radio" name="' + name + '" value="' + escAttr(o.value) + '" data-bind="' + bind + '"'
+      + (String(val) === String(o.value) ? ' checked' : '')
+      + (opts.rebuild ? ' data-rebuild="1"' : '')
+      + '><span>' + o.label + '</span></label>';
+  }
+  return h + '</div>';
+}
+function fld(label, control, hint) {
+  return '<div class="frow"><div class="flabel">' + label + '</div><div class="fcontrol">' + control + (hint ? '<div class="fhint">' + hint + '</div>' : '') + '</div></div>';
+}
+function txt(bind, val, ph) {
+  return '<input type="text" class="finput" data-bind="' + bind + '" value="' + escAttr(val == null ? '' : val) + '"' + (ph ? ' placeholder="' + escAttr(ph) + '"' : '') + '>';
+}
+function numInp(bind, val, ph) {
+  return '<input type="number" class="finput fnumber" data-bind="' + bind + '" value="' + escAttr(val == null || val === '' ? '' : val) + '"' + (ph ? ' placeholder="' + escAttr(ph) + '"' : '') + '>';
+}
+function chk(bind, val, label, rebuild) {
+  return '<label class="fcheck"><input type="checkbox" data-bind="' + bind + '"' + (val ? ' checked' : '') + (rebuild ? ' data-rebuild="1"' : '') + '>' + (label || '') + '</label>';
+}
+function ta(bind, val, rows, ph) {
+  return '<textarea class="ftextarea" data-bind="' + bind + '" rows="' + rows + '"' + (ph ? ' placeholder="' + escAttr(ph) + '"' : '') + '>' + escAttr(val == null ? '' : val) + '</textarea>';
+}
+function chipEdit(path, label, comp, clearable) {
+  var h = '<div class="chip" data-edit="' + escAttr(path) + '" data-editlabel="' + escAttr(label) + '" title="点击编辑">'
+    + '<span class="lbl">' + label + '</span><span class="chip-comp">' + componentToHtml(comp) + '</span>';
+  if (clearable) h += '<button type="button" class="btn small danger" data-clearcomp="' + escAttr(path) + '" title="清除">✕</button>';
+  return h + '</div>';
+}
+function miniEdit(path, comp) {
+  return '<button type="button" class="btn small" data-edit="' + escAttr(path) + '" data-editlabel="显示文字">' + componentToHtml(comp) + '</button>';
+}
+function actionParamsFor(type) {
+  if (type === 'run_command') return [{ key: 'command', label: 'command', ph: 'say hi', hint: '以玩家身份执行命令（要求对应权限）。' }];
+  if (type === 'suggest_command') return [{ key: 'command', label: 'command', ph: 'say hi', hint: '在输入框中预填建议的命令。' }];
+  if (type === 'open_url') return [{ key: 'url', label: 'url', ph: 'https://example.com', hint: '仅支持 http/https。' }];
+  if (type === 'copy_to_clipboard') return [{ key: 'value', label: 'value', ph: '要复制的文字' }];
+  if (type === 'change_page') return [{ key: 'page', label: 'page', ph: '0', number: true, hint: '0 起，只能翻当前书/对话框内的页。' }];
+  if (type === 'show_dialog') return [{ key: 'dialog', label: 'dialog', ph: 'mypack:next', hint: '目标 Dialog 的命名空间 ID（或 inline dialog）。' }];
+  return [];
+}
+function actionEditor(bind, a, inputKeys) {
+  var h = '<div class="subhead">按钮动作（action）</div>';
+  var opts = [{ value: '', label: '（不执行任何操作）' }].concat(DIALOG_ACTIONS);
+  var current = a ? a.type : '';
+  h += fld('动作类型', radioGroup(bind + '.type', current, opts, { rebuild: true, col: true }));
+  if (!a) {
+    h += '<div class="fhint">选择「不执行任何操作」时，点击按钮不会执行任何动作，只会触发 after_action（默认 close）。</div>';
+    return h;
+  }
+  if (a.type === 'minecraft:dynamic/run_command') {
+    h += fld('模板（宏）', ta(bind + '.template', a.template, 3, 'say 名字=$(player_name)'),
+      '按 1.21.6 宏替换规则执行：<span class="code">$(key)</span> 会被对应输入控件的当前值替换；未提交的输入替换为空字符串。');
+    h += '<div class="keybar">输入变量：';
+    if (!inputKeys.length) h += '<span class="muted">（暂无输入控件）</span>';
+    else for (var i = 0; i < inputKeys.length; i++) {
+      h += '<button type="button" class="btn small keychip" data-insertkey="' + escAttr(inputKeys[i]) + '" data-insertbind="' + escAttr(bind + '.template') + '">$(' + escAttr(inputKeys[i]) + ')</button>';
+    }
+    h += '</div>';
+    h += '<div class="fhint keyuse" data-keyuse="' + escAttr(bind + '.template') + '"></div>';
+  } else if (a.type === 'minecraft:dynamic/custom') {
+    h += fld('自定义 ID（命名空间）', txt(bind + '.id', a.id, 'mypack:submit'), '发送给服务器时使用的命名空间 ID。');
+    h += fld('additions（JSON 对象）', ta(bind + '.additions', a.additions, 3, '{ "bonus": 10 }'), '可选静态数据；所有输入控件会按各自的 key 一起放入发送的数据中。');
+  } else {
+    var params = actionParamsFor(a.type);
+    for (var j = 0; j < params.length; j++) {
+      var p = params[j];
+      h += fld(p.label, p.number ? numInp(bind + '.' + p.key, a[p.key], p.ph) : txt(bind + '.' + p.key, a[p.key], p.ph), p.hint || '');
+    }
+  }
+  return h;
+}
+function buttonEditor(bind, b, inputKeys, title) {
+  var h = '';
+  if (title) h += '<div class="subhead">' + title + '</div>';
+  h += fld('label（文本组件）', chipEdit(bind + '.label', 'label', b.label));
+  h += fld('tooltip（可选）', chipEdit(bind + '.tooltip', 'tooltip', b.tooltip || { text: '' }, !!b.tooltip));
+  h += fld('width', numInp(bind + '.width', b.width, '150'), '1~1024，默认 150。');
+  h += actionEditor(bind + '.action', b.action, inputKeys);
+  return h;
+}
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function listBlock(name, items, adders) {
+  var h = '<div class="list-block">';
+  if (!items.length) h += '<div class="muted">暂无' + name + '。点击下方按钮添加。</div>';
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    h += '<div class="lrow"><span class="grip">' + (i + 1) + '</span>'
+      + '<button type="button" class="main" data-goto="' + escAttr(it.view) + '"><span>' + escAttr(it.title) + '</span>' + (it.sub ? '<span class="sub">' + escAttr(it.sub) + '</span>' : '') + '</button>'
+      + '<span class="ops">'
+      + (i > 0 ? '<button type="button" class="btn small" data-action="move' + cap(it.kind) + '" data-arg="' + i + '" data-dir="-1">↑</button>' : '')
+      + (i < items.length - 1 ? '<button type="button" class="btn small" data-action="move' + cap(it.kind) + '" data-arg="' + i + '" data-dir="1">↓</button>' : '')
+      + '<button type="button" class="btn small danger" data-action="del' + cap(it.kind) + '" data-arg="' + i + '">✕</button>'
+      + '</span></div>';
+  }
+  h += '<div class="addbar"><span class="lbl">添加</span>';
+  for (var a = 0; a < adders.length; a++) {
+    h += '<button type="button" class="btn small" data-action="' + adders[a].action + '" data-arg="' + escAttr(adders[a].arg) + '">' + escAttr(adders[a].label) + '</button>';
+  }
+  h += '</div></div>';
+  return h;
+}
+function delRow(kind, index) {
+  return '<div class="addbar"><button type="button" class="btn small danger" data-action="del' + cap(kind) + '" data-arg="' + index + '">删除此项</button></div>';
+}
+function navGroupOpen(label, count, view, errKey) {
+  var badge = '';
+  if (errBadge[errKey]) badge = '<span class="errbadge">' + errBadge[errKey] + '</span>';
+  else if (count !== null && count !== undefined) badge = '<span class="cnt">' + count + '</span>';
+  var head = view ? '<button type="button" class="nav-group-head" data-view="' + view + '"><span>' : '<div class="nav-group-head"><span>';
+  var close = view ? '</span>' + badge + '</button>' : '</span>' + badge + '</div>';
+  return '<div class="nav-group">' + head + label + close + '<div class="nav-items">';
+}
+function navGroupClose() { return '</div></div>'; }
+function navItem(view, title, sub) {
+  var sel = viewKey(dlgView) === view ? ' selected' : '';
+  return '<button type="button" class="nav-item' + sel + '" data-view="' + view + '"><span class="t">' + title + '</span>' + (sub ? '<span class="sub">' + sub + '</span>' : '') + '</button>';
+}
+function viewKey(v) {
+  if (v.kind === 'body') return 'body:' + v.index;
+  if (v.kind === 'input') return 'input:' + v.index;
+  if (v.kind === 'action') return 'action:' + v.index;
+  if (v.kind === 'dialog') return 'dialog:' + v.index;
+  return v.kind;
+}
+function shortDialogType(t) { return String(t).replace('minecraft:', ''); }
+function parseView(s) {
+  if (s.indexOf(':') === -1) return { kind: s };
+  var parts = s.split(':');
+  return { kind: parts[0], index: parseInt(parts[1], 10) };
+}
+function safeView(v) {
+  var m = dialogModel;
+  if (!v) v = { kind: 'general' };
+  var k = v.kind;
+  if (k === 'type' || k === 'title' || k === 'external_title' || k === 'source') return { kind: 'general' };
+  if (k === 'body' && (v.index < 0 || v.index >= m.body.length)) return { kind: 'body_list' };
+  if (k === 'input' && (v.index < 0 || v.index >= m.inputs.length)) return { kind: 'input_list' };
+  if (k === 'action' && (v.index < 0 || v.index >= m.actions.length)) return { kind: 'action_list' };
+  if (k === 'dialog' && (v.index < 0 || v.index >= m.dialogs.length)) return { kind: 'dialog_list' };
+  if ((k === 'action_list' || k === 'action') && m.type !== 'minecraft:multi_action') return { kind: 'general' };
+  if ((k === 'dialog_list' || k === 'dialog') && m.type !== 'minecraft:dialog_list') return { kind: 'general' };
+  if (k === 'notice_action' && m.type !== 'minecraft:notice') return { kind: 'general' };
+  if ((k === 'confirm_yes' || k === 'confirm_no') && m.type !== 'minecraft:confirmation') return { kind: 'general' };
+  if (k === 'exit' && m.type !== 'minecraft:multi_action' && m.type !== 'minecraft:dialog_list') return { kind: 'general' };
+  return v;
+}
+function detailTitle(v) {
+  switch (v.kind) {
+    case 'type': return '类型';
+    case 'title': return '标题 title';
+    case 'external_title': return '外部标题 external_title';
+    case 'general': return '常规设置';
+    case 'source': return '来源';
+    case 'body_list': return '正文 body';
+    case 'body': return '正文 #' + (v.index + 1);
+    case 'input_list': return '输入控件 inputs';
+    case 'input': return '输入 #' + (v.index + 1);
+    case 'action_list': return '按钮 actions';
+    case 'action': return '按钮 #' + (v.index + 1);
+    case 'notice_action': return '主按钮 action';
+    case 'confirm_yes': return '确认按钮 yes';
+    case 'confirm_no': return '取消按钮 no';
+    case 'dialog_list': return '对话框列表 dialogs';
+    case 'dialog': return '对话框 #' + (v.index + 1);
+    case 'exit': return '退出动作 exit_action';
+    default: return '字段';
+  }
+}
+
+// ---- nav + detail rendering ----
+function renderDialogNav() {
+  var m = dialogModel;
+  var errs = validateDialog(m);
+  errBadge = {};
+  for (var i = 0; i < errs.length; i++) {
+    var g = errs[i].group;
+    errBadge[g] = (errBadge[g] || 0) + 1;
+  }
+  var html = '';
+  html += navGroupOpen('常规', null, 'general', 'general');
+  html += navItem('general', '常规设置', shortDialogType(m.type));
+  html += navGroupClose();
+  html += navGroupOpen('正文', m.body.length, 'body_list', 'body');
+  for (var bi = 0; bi < m.body.length; bi++) {
+    html += navItem('body:' + bi, '正文 ' + (bi + 1), m.body[bi].type === 'plain_message' ? 'plain_message' : 'item');
+  }
+  html += navGroupClose();
+  html += navGroupOpen('输入', m.inputs.length, 'input_list', 'inputs');
+  for (var ii = 0; ii < m.inputs.length; ii++) {
+    var iname = m.inputs[ii].key || '(key 为空)';
+    html += navItem('input:' + ii, iname, m.inputs[ii].type);
+  }
+  html += navGroupClose();
+  if (m.type === 'minecraft:notice') {
+    html += navGroupOpen('按钮', 1, 'notice_action', 'actions');
+    html += navItem('notice_action', '主按钮', isComponentEmpty(m.notice_action.label) ? '（空）' : componentText(m.notice_action.label).slice(0, 12));
+    html += navGroupClose();
+  } else if (m.type === 'minecraft:confirmation') {
+    html += navGroupOpen('按钮', 2, 'confirm_yes', 'actions');
+    html += navItem('confirm_yes', '确认（yes）', isComponentEmpty(m.confirm_yes.label) ? '（空）' : componentText(m.confirm_yes.label).slice(0, 12));
+    html += navItem('confirm_no', '取消（no）', isComponentEmpty(m.confirm_no.label) ? '（空）' : componentText(m.confirm_no.label).slice(0, 12));
+    html += navGroupClose();
+  } else if (m.type === 'minecraft:multi_action') {
+    html += navGroupOpen('按钮', m.actions.length, 'action_list', 'actions');
+    for (var ai = 0; ai < m.actions.length; ai++) {
+      html += navItem('action:' + ai, '按钮 ' + (ai + 1), isComponentEmpty(m.actions[ai].label) ? '（空）' : componentText(m.actions[ai].label).slice(0, 12));
+    }
+    html += navGroupClose();
+  } else if (m.type === 'minecraft:dialog_list') {
+    html += navGroupOpen('对话框', m.dialogs.length, 'dialog_list', 'actions');
+    for (var dli = 0; dli < m.dialogs.length; dli++) {
+      html += navItem('dialog:' + dli, '对话框 ' + (dli + 1), m.dialogs[dli].id || '（空）');
+    }
+    html += navGroupClose();
+  }
+  if (m.type === 'minecraft:multi_action' || m.type === 'minecraft:dialog_list') {
+    html += navGroupOpen('退出动作', null, 'exit', 'actions');
+    html += navItem('exit', 'exit_action', m.exit_action ? (isComponentEmpty(m.exit_action.label) ? '（空）' : componentText(m.exit_action.label).slice(0, 12)) : '（无）');
+    html += navGroupClose();
+  }
+  document.getElementById('dlgNav').innerHTML = html;
+}
+
+function renderDialogDetail() {
+  var m = dialogModel;
+  var inputKeys = [];
+  for (var ik = 0; ik < m.inputs.length; ik++) {
+    var kk = m.inputs[ik].key;
+    if (/^[A-Za-z0-9_]+$/.test(kk)) inputKeys.push(kk);
+  }
+  var el = document.getElementById('dlgDetail');
+  var v = dlgView;
+  var html = '<div class="detail-title">' + detailTitle(v) + '</div>';
+  if (v.kind === 'general') {
+    html += '<div class="subhead">类型</div>';
+    html += fld('Dialog 类型', radioGroup('type', m.type, DIALOG_TYPES, { rebuild: true, col: true }));
+    html += '<div class="fhint">类型决定按钮布局：notice=单个按钮；confirmation=yes/no；multi_action=任意数量按钮+列数；dialog_list=进入其他对话框的菜单。</div>';
+    html += '<div class="subhead">标题</div>';
+    html += fld('标题（title）', chipEdit('title', 'title', m.title));
+    html += '<div class="fhint">Dialog 屏幕顶部显示的标题。留空则不输出 title。</div>';
+    html += fld('外部标题（external_title）', chipEdit('external_title', 'external_title', m.external_title || { text: '' }, !!m.external_title));
+    html += '<div class="fhint">作为入口（暂停菜单/对话框列表）时的按钮文本；缺省使用 title。留空则不输出。</div>';
+    html += '<div class="subhead">行为</div>';
+    html += fld('can_close_with_escape', chk('can_close_with_escape', m.can_close_with_escape, '允许按 ESC 关闭'));
+    html += fld('pause', chk('pause', m.pause, '打开时暂停游戏'));
+    html += fld('after_action', radioGroup('after_action', m.after_action, AFTER_ACTIONS, {}), '点击按钮/提交输入后的行为，默认 close。');
+    if (m.type === 'minecraft:multi_action' || m.type === 'minecraft:dialog_list') {
+      html += fld('columns', numInp('columns', m.columns, '2'), '按钮列表的列数，正整数，默认 2。');
+      html += fld('button_width', numInp('button_width', m.button_width, '150'), '1~1024，默认 150。');
+    }
+    html += '<div class="subhead">来源</div>';
+    html += fld('来源', '<label class="fcheck"><input type="radio" name="dlgSource" value="inline" data-bind="source" data-rebuild="1"' + (m.source === 'inline' ? ' checked' : '') + '> Inline（完整 JSON）</label>'
+      + ' <label class="fcheck"><input type="radio" name="dlgSource" value="registry" data-bind="source" data-rebuild="1"' + (m.source === 'registry' ? ' checked' : '') + '> Registry ID（数据包注册）</label>');
+    if (m.source === 'registry') {
+      html += fld('命名空间 namespace', txt('namespace', m.namespace, 'mypack'));
+      html += fld('ID', txt('id', m.id, 'example'));
+      html += fld('注册 ID', '<span class="code">' + escAttr(registryId(m)) + '</span>', '数据包中对应文件 data/<命名空间>/dialog/<id>.json。');
+    } else {
+      html += '<div class="fhint">inline 模式会把完整 Dialog JSON 直接拼进 /dialog show 命令。</div>';
+    }
+  } else if (v.kind === 'body_list') {
+    html += listBlock('正文', m.body.map(function (b, i) {
+      return { title: '正文 ' + (i + 1), sub: b.type === 'plain_message' ? 'plain_message' : 'item', view: 'body:' + i, kind: 'body', index: i };
+    }), [
+      { label: '＋ 文本', arg: 'plain_message', action: 'addBody' },
+      { label: '＋ 物品', arg: 'item', action: 'addBody' }
+    ]);
+  } else if (v.kind === 'body') {
+    var b = m.body[v.index];
+    if (!b) { html += '<div class="muted">（正文已被删除）</div>'; }
+    else if (b.type === 'plain_message') {
+      html += '<div class="subhead">正文 plain_message #' + (v.index + 1) + '</div>';
+      html += fld('contents（文本组件）', chipEdit('body.' + v.index + '.contents', 'contents', b.contents));
+      html += fld('width', numInp('body.' + v.index + '.width', b.width, '200'), '1~1024，默认 200。');
+      html += delRow('body', v.index);
+    } else {
+      html += '<div class="subhead">正文 item #' + (v.index + 1) + '</div>';
+      html += fld('item（物品 ID）', txt('body.' + v.index + '.item.id', b.item.id, 'minecraft:diamond'));
+      html += fld('count', numInp('body.' + v.index + '.item.count', b.item.count, '1'));
+      html += fld('show_decorations', chk('body.' + v.index + '.show_decorations', b.show_decorations, '显示物品装饰（耐久、数量角标）'));
+      html += fld('show_tooltip', chk('body.' + v.index + '.show_tooltip', b.show_tooltip, '显示物品提示'));
+      html += fld('width', numInp('body.' + v.index + '.width', b.width, '16'), '1~256，默认 16。');
+      html += fld('height', numInp('body.' + v.index + '.height', b.height, '16'), '1~256，默认 16。');
+      html += fld('description（可选）', chipEdit('body.' + v.index + '.description.contents', 'description', b.description ? b.description.contents : { text: '' }, !!b.description));
+      html += fld('description width', numInp('body.' + v.index + '.description.width', b.description ? b.description.width : 200, '200'), '1~1024，默认 200。');
+      html += delRow('body', v.index);
+    }
+  } else if (v.kind === 'input_list') {
+    html += listBlock('输入控件', m.inputs.map(function (inp, i) {
+      return { title: inp.key || ('输入 ' + (i + 1)), sub: inp.type, view: 'input:' + i, kind: 'input', index: i };
+    }), [
+      { label: '＋ 文本', arg: 'text', action: 'addInput' },
+      { label: '＋ 布尔', arg: 'boolean', action: 'addInput' },
+      { label: '＋ 选项', arg: 'single_option', action: 'addInput' },
+      { label: '＋ 数值', arg: 'number_range', action: 'addInput' }
+    ]);
+  } else if (v.kind === 'input') {
+    var inp = m.inputs[v.index];
+    if (!inp) { html += '<div class="muted">（输入控件已被删除）</div>'; }
+    else {
+      var base = 'inputs.' + v.index;
+      html += '<div class="subhead">输入控件 ' + (v.index + 1) + ' · ' + inp.type + '</div>';
+      html += fld('key', txt(base + '.key', inp.key, 'player_name'), '仅允许字母、数字、下划线，且不可重复。');
+      html += fld('label（文本组件）', chipEdit(base + '.label', 'label', inp.label));
+      if (inp.type === 'text') {
+        html += fld('width', numInp(base + '.width', inp.width, '200'), '1~1024，默认 200。');
+        html += fld('label_visible', chk(base + '.label_visible', inp.label_visible, '显示 label'));
+        html += fld('initial', txt(base + '.initial', inp.initial, ''));
+        html += fld('max_length', numInp(base + '.max_length', inp.max_length, '32'), '正整数，默认 32。');
+        html += fld('multiline（多行）', chk(base + '.multiline', inp.multiline, '启用多行', true));
+        if (inp.multiline) {
+          html += fld('max_lines', numInp(base + '.max_lines', inp.max_lines, '4'));
+          html += fld('height', numInp(base + '.height', inp.height, '100'), '1~512。');
+        }
+      } else if (inp.type === 'boolean') {
+        html += fld('initial', chk(base + '.initial', inp.initial, '默认勾选'));
+        html += fld('on_true', txt(base + '.on_true', inp.on_true, 'true'), '勾选时提交的字符串，默认 "true"。');
+        html += fld('on_false', txt(base + '.on_false', inp.on_false, 'false'), '未勾选时提交的字符串，默认 "false"。');
+      } else if (inp.type === 'single_option') {
+        html += fld('label_visible', chk(base + '.label_visible', inp.label_visible, '显示 label'));
+        html += fld('width', numInp(base + '.width', inp.width, '200'), '1~1024，默认 200。');
+        html += '<div class="subhead">选项 options</div>';
+        for (var oi = 0; oi < inp.options.length; oi++) {
+          var opt = inp.options[oi];
+          html += '<div class="lrow">'
+            + '<span class="grip">' + (oi + 1) + '</span>'
+            + txt(base + '.options.' + oi + '.id', opt.id, 'easy')
+            + '<label class="fcheck"><input type="checkbox" data-bind="' + base + '.options.' + oi + '.initial"' + (opt.initial ? ' checked' : '') + '>初始</label>'
+            + miniEdit(base + '.options.' + oi + '.display', opt.display || { text: '' })
+            + '<span class="ops">'
+            + (oi > 0 ? '<button type="button" class="btn small" data-action="moveOption" data-arg="' + v.index + '" data-arg2="' + oi + '" data-dir="-1">↑</button>' : '')
+            + (oi < inp.options.length - 1 ? '<button type="button" class="btn small" data-action="moveOption" data-arg="' + v.index + '" data-arg2="' + oi + '" data-dir="1">↓</button>' : '')
+            + '<button type="button" class="btn small danger" data-action="delOption" data-arg="' + v.index + '" data-arg2="' + oi + '">✕</button>'
+            + '</span></div>';
+        }
+        html += '<div class="addbar"><span class="lbl">添加选项</span><button type="button" class="btn small" data-action="addOption" data-arg="' + v.index + '">＋ 选项</button></div>';
+      } else if (inp.type === 'number_range') {
+        html += fld('label_format', txt(base + '.label_format', inp.label_format, 'options.generic_value'), 'label 的翻译键，缺省 options.generic_value。');
+        html += fld('width', numInp(base + '.width', inp.width, '200'), '1~1024，默认 200。');
+        html += fld('start', numInp(base + '.start', inp.start, '0'));
+        html += fld('end', numInp(base + '.end', inp.end, '100'));
+        html += fld('initial', numInp(base + '.initial', inp.initial, ''), '缺省为区间中点。');
+        html += fld('step', numInp(base + '.step', inp.step, ''), '可选；缺省则区间内任意值，设置后只能取 initial + n×step。');
+      }
+      html += delRow('input', v.index);
+    }
+  } else if (v.kind === 'action_list') {
+    html += listBlock('按钮', m.actions.map(function (a, i) {
+      return { title: '按钮 ' + (i + 1), sub: isComponentEmpty(a.label) ? '（空）' : componentText(a.label).slice(0, 14), view: 'action:' + i, kind: 'action', index: i };
+    }), [{ label: '＋ 按钮', arg: '', action: 'addAction' }]);
+  } else if (v.kind === 'action') {
+    var act = m.actions[v.index];
+    if (!act) html += '<div class="muted">（按钮已被删除）</div>';
+    else {
+      html += buttonEditor('actions.' + v.index, act, inputKeys, '按钮 ' + (v.index + 1));
+      html += delRow('action', v.index);
+    }
+  } else if (v.kind === 'notice_action') {
+    html += buttonEditor('notice_action', m.notice_action, inputKeys, '主按钮 action');
+  } else if (v.kind === 'confirm_yes') {
+    html += buttonEditor('confirm_yes', m.confirm_yes, inputKeys, '确认按钮（yes）');
+  } else if (v.kind === 'confirm_no') {
+    html += buttonEditor('confirm_no', m.confirm_no, inputKeys, '取消按钮（no）');
+  } else if (v.kind === 'dialog_list') {
+    html += listBlock('对话框', m.dialogs.map(function (d, i) {
+      return { title: d.id || ('对话框 ' + (i + 1)), sub: d.note || '', view: 'dialog:' + i, kind: 'dialog', index: i };
+    }), [{ label: '＋ 对话框', arg: '', action: 'addDialog' }]);
+  } else if (v.kind === 'dialog') {
+    var d = m.dialogs[v.index];
+    if (!d) html += '<div class="muted">（条目已被删除）</div>';
+    else {
+      html += '<div class="subhead">对话框 ' + (v.index + 1) + '</div>';
+      html += fld('ID（命名空间）', txt('dialogs.' + v.index + '.id', d.id, 'mypack:example'), '目标 Dialog 的注册 ID；其 external_title 会作为按钮标题。');
+      html += fld('备注（仅本地）', txt('dialogs.' + v.index + '.note', d.note, ''), '备注不会写入导出 JSON。');
+      html += delRow('dialog', v.index);
+    }
+  } else if (v.kind === 'exit') {
+    if (!m.exit_action) {
+      html += '<div class="fhint">exit_action 用于 Dialog 底部的退出按钮与 ESC 行为；缺省则不显示底部。</div>';
+      html += '<button type="button" class="btn" data-action="addExit">＋ 添加 exit_action</button>';
+    } else {
+      html += buttonEditor('exit_action', m.exit_action, inputKeys, '退出按钮 exit_action');
+      html += '<button type="button" class="btn small danger" data-action="delExit">移除 exit_action</button>';
+    }
+  }
+  el.innerHTML = html;
+}
+
+// ---- preview ----
+function renderDialogPreview() {
+  var m = dialogModel;
+  var box = document.getElementById('dlgPreview');
+  if (!box) return;
+  var html = '<div class="dp">';
+  if (!isComponentEmpty(m.title)) html += '<div class="dp-title">' + componentToHtml(m.title) + '</div>';
+  var bodyHtml = '';
+  for (var i = 0; i < m.body.length; i++) {
+    var b = m.body[i];
+    if (b.type === 'plain_message') bodyHtml += '<div class="dp-msg">' + componentToHtml(b.contents) + '</div>';
+    else if (b.type === 'item') {
+      var cnt = b.item.count > 1 ? ' ×' + b.item.count : '';
+      bodyHtml += '<div class="dp-msg"><span class="dp-item">' + escAttr(b.item.id || '(物品)') + cnt + '</span></div>';
+    }
+  }
+  if (bodyHtml) html += '<div class="dp-body">' + bodyHtml + '</div>';
+  var inputHtml = '';
+  for (var j = 0; j < m.inputs.length; j++) {
+    var inp = m.inputs[j];
+    var lbl = isComponentEmpty(inp.label) ? '' : componentToHtml(inp.label);
+    if (inp.type === 'text') {
+      inputHtml += '<div class="dp-input"><span class="dp-lbl">' + lbl + '</span><span class="dp-widget">' + escAttr(inp.initial || '') + (inp.multiline ? '（多行）' : '') + '</span></div>';
+    } else if (inp.type === 'boolean') {
+      inputHtml += '<div class="dp-input"><span class="dp-widget dp-check">' + (inp.initial ? '☑' : '☐') + '</span><span class="dp-lbl">' + lbl + '</span></div>';
+    } else if (inp.type === 'single_option') {
+      var cur = '';
+      for (var oi = 0; oi < inp.options.length; oi++) if (inp.options[oi].initial) cur = inp.options[oi].display ? componentText(inp.options[oi].display) : inp.options[oi].id;
+      inputHtml += '<div class="dp-input"><span class="dp-lbl">' + lbl + '</span><span class="dp-widget">' + escAttr(cur || '选项') + ' ▾</span></div>';
+    } else if (inp.type === 'number_range') {
+      var s = typeof inp.start === 'number' ? inp.start : 0;
+      var e = typeof inp.end === 'number' ? inp.end : 100;
+      var mid = (inp.initial !== null && inp.initial !== undefined && typeof inp.initial === 'number') ? inp.initial : (s + e) / 2;
+      var pct = e > s ? ((mid - s) / (e - s)) * 100 : 50;
+      inputHtml += '<div class="dp-input"><span class="dp-lbl">' + lbl + '</span><span class="dp-widget dp-range"><span class="dp-slider" style="left:' + Math.max(0, Math.min(100, pct)).toFixed(1) + '%"></span></span></div>';
+    }
+  }
+  if (inputHtml) html += '<div class="dp-inputs">' + inputHtml + '</div>';
+  var btns = collectButtons(m);
+  var cols = (m.type === 'minecraft:multi_action' || m.type === 'minecraft:dialog_list') ? m.columns : Math.max(1, btns.length);
+  if (!(cols >= 1)) cols = 1;
+  cols = Math.max(1, Math.min(4, cols));
+  var btnHtml = '';
+  for (var k = 0; k < btns.length; k++) {
+    var blbl = isComponentEmpty(btns[k].button.label) ? '(未命名)' : componentToHtml(btns[k].button.label);
+    btnHtml += '<button type="button" class="dp-btn">' + blbl + '</button>';
+  }
+  if (m.type === 'minecraft:dialog_list') {
+    for (var di = 0; di < m.dialogs.length; di++) btnHtml += '<button type="button" class="dp-btn">' + escAttr(m.dialogs[di].id || '(未设置)') + '</button>';
+  }
+  if (btnHtml) html += '<div class="dp-actions" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">' + btnHtml + '</div>';
+  if (m.exit_action) {
+    var elbl = isComponentEmpty(m.exit_action.label) ? '返回' : componentToHtml(m.exit_action.label);
+    html += '<div class="dp-footer"><button type="button" class="dp-btn dp-exit">' + elbl + '</button></div>';
+  }
+  if (m.type === 'minecraft:dialog_list') {
+    html += '<div class="dp-footer fhint" style="text-align:center">按钮标题取目标 Dialog 的 external_title</div>';
+  }
+  html += '</div>';
+  box.innerHTML = html;
+}
+
+// ---- output ----
+var OUT_TABS = [
+  { key: 'json', label: 'Dialog JSON' },
+  { key: 'show', label: 'show 命令' },
+  { key: 'clear', label: 'clear 命令' },
+  { key: 'datapack', label: '数据包' }
+];
+function dialogOutputText(tab) {
+  if (tab === 'json') return dialogJsonString(true);
+  if (tab === 'show') return dialogShowCommand();
+  if (tab === 'clear') return dialogClearCommand();
+  if (tab === 'datapack') {
+    var ns = (dialogModel.namespace || 'mypack').replace(/[^a-z0-9_.-]/g, '');
+    var id = (dialogModel.id || 'dialog').replace(/[^a-z0-9_.-]/g, '');
+    var pf = dlgPackFormat ? parseInt(dlgPackFormat.value, 10) : 80;
+    if (!(pf >= 1)) pf = 80;
+    return '包结构：\n  pack.mcmeta\n  data/' + ns + '/dialog/' + id + '.json\n\n── pack.mcmeta ──\n'
+      + JSON.stringify({ pack: { pack_format: pf, description: 'Minecraft Dialogs' } }, null, 2)
+      + '\n\n── data/' + ns + '/dialog/' + id + '.json ──\n' + dialogJsonString(true)
+      + '\n\n游戏内用 /dialog show @s ' + ns + ':' + id + ' 打开。';
+  }
+  return '';
+}
+function renderDialogOutput() {
+  var tabsEl = document.getElementById('dlgOutTabs');
+  var outEl = document.getElementById('dlgOutput');
+  var h = '';
+  for (var i = 0; i < OUT_TABS.length; i++) {
+    h += '<button type="button" class="out-tab' + (dlgOutTab === OUT_TABS[i].key ? ' active' : '') + '" data-tab="' + OUT_TABS[i].key + '">' + OUT_TABS[i].label + '</button>';
+  }
+  tabsEl.innerHTML = h;
+  outEl.textContent = dialogOutputText(dlgOutTab);
+}
+function renderDialogErrors() {
+  var el = document.getElementById('dlgErrors');
+  var errs = validateDialog(dialogModel);
+  if (!errs.length) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+  el.classList.remove('hidden');
+  var h = '<h3>有 ' + errs.length + ' 处问题，请修正后再使用：</h3>';
+  for (var i = 0; i < errs.length; i++) h += '<div class="err-item">' + escAttr(errs[i].message) + '</div>';
+  el.innerHTML = h;
+}
+function renderDialogUI() {
+  dlgView = safeView(dlgView);
+  renderDialogNav();
+  renderDialogDetail();
+  renderDialogPreview();
+  renderDialogOutput();
+  renderDialogErrors();
+}
+
+// ---- mutations ----
+function onDlgMutated(rebuild) {
+  if (rebuild) { renderDialogUI(); return; }
+  renderDialogNav();
+  renderDialogPreview();
+  renderDialogOutput();
+  renderDialogErrors();
+}
+function readControlValue(el) {
+  if (el.type === 'checkbox') return el.checked;
+  if (el.type === 'number') {
+    if (el.value === '') return null;
+    var n = parseFloat(el.value);
+    return isNaN(n) ? null : n;
+  }
+  if (el.type === 'radio') return el.value;
+  return el.value;
+}
+function onDetailInput(e) {
+  var el = e.target;
+  var bind = el.getAttribute('data-bind');
+  if (!bind) return;
+  modelSetPath(dialogModel, bind, readControlValue(el));
+  if (bind.slice(-9) === '.template') updateKeyUse();
+  onDlgMutated(false);
+}
+function onDetailChange(e) {
+  var el = e.target;
+  var bind = el.getAttribute('data-bind');
+  if (!bind) return;
+  var val = readControlValue(el);
+  modelSetPath(dialogModel, bind, val);
+  if (bind.slice(-5) === '.type') {
+    // 空值 = 不执行任何操作，action 置为 null，导出时省略该字段
+    modelSetPath(dialogModel, bind.slice(0, -5), val === '' ? null : blankDialogAction(val));
+  }
+  onDlgMutated(el.getAttribute('data-rebuild') === '1');
+}
+function updateKeyUse() {
+  var useEl = document.querySelector('#dlgDetail [data-keyuse]');
+  if (!useEl) return;
+  var bind = useEl.getAttribute('data-keyuse');
+  var el = document.querySelector('#dlgDetail [data-bind="' + bind + '"]');
+  if (!el) return;
+  var tmpl = el.value || '';
+  var re = /\$\(([A-Za-z0-9_]+)\)/g;
+  var found = [];
+  var mm;
+  while ((mm = re.exec(tmpl)) !== null) found.push(mm[1]);
+  var keys = {};
+  for (var i = 0; i < dialogModel.inputs.length; i++) keys[dialogModel.inputs[i].key] = true;
+  var h = '模板中使用的变量：';
+  var any = false;
+  for (var j = 0; j < found.length; j++) {
+    var k = found[j];
+    any = true;
+    h += '<span class="keychip">' + escAttr(k) + (keys[k] ? ' ✓' : ' ✗ 不存在') + '</span>';
+  }
+  useEl.innerHTML = any ? h : '';
+}
+function handleDlgAction(action, arg, arg2, dir) {
+  var m = dialogModel;
+  if (action === 'addBody') {
+    m.body.push(arg === 'item' ? blankItemBody() : blankPlainMessageBody());
+    dlgView = { kind: 'body', index: m.body.length - 1 };
+  } else if (action === 'delBody') {
+    m.body.splice(+arg, 1); dlgView = { kind: 'body_list' };
+  } else if (action === 'moveBody') {
+    var b1 = +arg, b2 = b1 + (+dir);
+    if (b2 >= 0 && b2 < m.body.length) { var tb = m.body[b1]; m.body[b1] = m.body[b2]; m.body[b2] = tb; }
+  } else if (action === 'addInput') {
+    m.inputs.push(arg === 'boolean' ? blankBooleanInput() : arg === 'single_option' ? blankSingleOptionInput() : arg === 'number_range' ? blankNumberRangeInput() : blankTextInput());
+    dlgView = { kind: 'input', index: m.inputs.length - 1 };
+  } else if (action === 'delInput') {
+    m.inputs.splice(+arg, 1); dlgView = { kind: 'input_list' };
+  } else if (action === 'moveInput') {
+    var c1 = +arg, c2 = c1 + (+dir);
+    if (c2 >= 0 && c2 < m.inputs.length) { var tc = m.inputs[c1]; m.inputs[c1] = m.inputs[c2]; m.inputs[c2] = tc; }
+  } else if (action === 'addOption') {
+    var oi = +arg;
+    m.inputs[oi].options.push({ id: 'option_' + (m.inputs[oi].options.length + 1), display: null, initial: false });
+  } else if (action === 'delOption') {
+    m.inputs[+arg].options.splice(+arg2, 1);
+  } else if (action === 'moveOption') {
+    var oa = +arg2, ob = oa + (+dir);
+    var opts = m.inputs[+arg].options;
+    if (ob >= 0 && ob < opts.length) { var to = opts[oa]; opts[oa] = opts[ob]; opts[ob] = to; }
+  } else if (action === 'addAction') {
+    m.actions.push(blankDialogActionButton());
+    dlgView = { kind: 'action', index: m.actions.length - 1 };
+  } else if (action === 'delAction') {
+    m.actions.splice(+arg, 1); dlgView = { kind: 'action_list' };
+  } else if (action === 'moveAction') {
+    var e1 = +arg, e2 = e1 + (+dir);
+    if (e2 >= 0 && e2 < m.actions.length) { var te = m.actions[e1]; m.actions[e1] = m.actions[e2]; m.actions[e2] = te; }
+  } else if (action === 'addDialog') {
+    m.dialogs.push({ id: '', note: '' });
+    dlgView = { kind: 'dialog', index: m.dialogs.length - 1 };
+  } else if (action === 'delDialog') {
+    m.dialogs.splice(+arg, 1); dlgView = { kind: 'dialog_list' };
+  } else if (action === 'moveDialog') {
+    var f1 = +arg, f2 = f1 + (+dir);
+    if (f2 >= 0 && f2 < m.dialogs.length) { var tf = m.dialogs[f1]; m.dialogs[f1] = m.dialogs[f2]; m.dialogs[f2] = tf; }
+  } else if (action === 'addExit') {
+    m.exit_action = blankDialogActionButton();
+    dlgView = { kind: 'exit' };
+  } else if (action === 'delExit') {
+    m.exit_action = null;
+    dlgView = { kind: 'exit' };
+  } else {
+    return;
+  }
+  renderDialogUI();
+}
+
+// ---- 复用文本组件编辑器编辑 dialog 字段 ----
+function showView(view) {
+  if (view === 'field' && !fieldEditState) view = 'text';
+  if (view === 'text' && fieldEditState) endFieldEdit(false);
+  var showText = view === 'text' || view === 'field';
+  document.getElementById('textTopbar').hidden = !showText;
+  document.getElementById('textMain').hidden = !showText;
+  document.getElementById('dialogTopbar').hidden = showText;
+  document.getElementById('dialogMain').hidden = showText;
+  document.getElementById('modeTextBtn').classList.toggle('active', view === 'text');
+  document.getElementById('modeDialogBtn').classList.toggle('active', view === 'dialog');
+  var field = view === 'field';
+  document.getElementById('textOptionsCard').classList.toggle('hidden', field);
+  document.getElementById('fieldEditBanner').classList.toggle('hidden', !field);
+}
+function beginFieldEdit(path, label) {
+  var comp = modelGetPath(dialogModel, path);
+  fieldEditState = { path: path, oldSegs: segments, oldValue: input.value, oldTyping: typingStyle };
+  segments = componentToSegments(comp);
+  mergeAdjacent();
+  input.value = fullText();
+  lastCaretPos = -1;
+  typingStyle = cloneStyle(caretSegment());
+  renderPreview();
+  updateToolbarState();
+  updateOutput();
+  showView('field');
+  document.getElementById('fieldEditName').textContent = label;
+}
+function endFieldEdit(save) {
+  if (!fieldEditState) return;
+  if (save) modelSetPath(dialogModel, fieldEditState.path, componentOf(segments));
+  segments = fieldEditState.oldSegs;
+  input.value = fieldEditState.oldValue;
+  typingStyle = fieldEditState.oldTyping;
+  lastCaretPos = -1;
+  renderPreview();
+  updateToolbarState();
+  updateOutput();
+  fieldEditState = null;
+  if (save) renderDialogUI(); // 让保存后的字段立即反映到 Dialog 结构/预览/输出
+}
+
+// ---- 模板 ----
+function taskTemplate() {
+  var m = blankDialogModel();
+  m.type = 'minecraft:confirmation';
+  m.title = { text: '任务委托', color: '#FFAA00' };
+  m.external_title = { text: '任务委托' };
+  m.body = [{ type: 'plain_message', contents: { text: '村民需要你寻找 3 个钻石。' }, width: 200 }];
+  m.confirm_yes = { label: { text: '接受任务' }, tooltip: null, width: 150, action: { type: 'run_command', command: 'say 玩家接受了任务' } };
+  m.confirm_no = { label: { text: '拒绝' }, tooltip: null, width: 150, action: { type: 'run_command', command: 'say 玩家拒绝了任务' } };
+  return m;
+}
+function charTemplate() {
+  var m = blankDialogModel();
+  m.type = 'minecraft:multi_action';
+  m.title = { text: '角色创建' };
+  m.external_title = { text: '角色创建' };
+  m.body = [{ type: 'plain_message', contents: { text: '请填写角色信息。' }, width: 200 }];
+  m.inputs = [blankTextInput(), blankBooleanInput(), blankSingleOptionInput(), blankNumberRangeInput()];
+  var ti = m.inputs[0]; ti.key = 'player_name'; ti.label = { text: '名字' };
+  var bi = m.inputs[1]; bi.key = 'confirm'; bi.label = { text: '确认' };
+  var so = m.inputs[2]; so.key = 'class'; so.label = { text: '职业' };
+  so.options = [
+    { id: 'warrior', display: { text: '战士' }, initial: true },
+    { id: 'mage', display: { text: '法师' }, initial: false },
+    { id: 'archer', display: { text: '弓箭手' }, initial: false }
+  ];
+  var nr = m.inputs[3]; nr.key = 'age'; nr.label = { text: '年龄' }; nr.start = 10; nr.end = 100; nr.initial = 20; nr.step = 1;
+  m.actions = [
+    { label: { text: '提交' }, tooltip: null, width: 150, action: { type: 'minecraft:dynamic/run_command', template: 'say 名字=$(player_name)' } },
+    { label: { text: '打开下一页' }, tooltip: null, width: 150, action: { type: 'show_dialog', dialog: 'mypack:next_page' } }
+  ];
+  m.columns = 2;
+  m.button_width = 150;
+  return m;
+}
+
+// ---- 导入 Dialog JSON ----
+function toComponent(v) {
+  if (v == null) return { text: '' };
+  if (typeof v === 'string') return { text: v };
+  if (typeof v === 'object') return v;
+  return { text: String(v) };
+}
+function buttonFromJson(b) {
+  var out = blankDialogActionButton();
+  out.label = toComponent(b.label);
+  if (b.tooltip !== undefined) out.tooltip = toComponent(b.tooltip);
+  if (typeof b.width === 'number') out.width = b.width;
+  out.action = b.action ? actionFromJson(b.action) : null; // 无动作按钮保持无动作
+  return out;
+}
+function actionFromJson(a) {
+  if (!a || typeof a !== 'object') return null;
+  var t = a.type;
+  var out = blankDialogAction(t);
+  if (!out) return null;
+  if (out.command !== undefined) out.command = a.command === undefined ? '' : String(a.command);
+  if (out.url !== undefined) out.url = a.url === undefined ? '' : String(a.url);
+  if (out.value !== undefined) out.value = a.value === undefined ? '' : String(a.value);
+  if (out.page !== undefined) out.page = typeof a.page === 'number' ? a.page : 0;
+  if (out.dialog !== undefined) out.dialog = a.dialog === undefined ? '' : String(a.dialog);
+  if (out.template !== undefined) out.template = a.template === undefined ? '' : String(a.template);
+  if (out.id !== undefined) out.id = a.id === undefined ? '' : String(a.id);
+  if (out.additions !== undefined) out.additions = a.additions !== undefined ? JSON.stringify(a.additions) : '';
+  return out;
+}
+function bodyFromJson(b) {
+  if (!b || typeof b !== 'object') return null;
+  var t = String(b.type || '');
+  if (t.indexOf('plain_message') !== -1) {
+    return { type: 'plain_message', contents: toComponent(b.contents), width: typeof b.width === 'number' ? b.width : 200 };
+  }
+  if (t.indexOf('item') !== -1) {
+    var it = b.item;
+    var itm = { id: '', count: 1 };
+    if (typeof it === 'string') itm.id = it;
+    else if (it && typeof it === 'object') {
+      itm.id = String(it.id || '');
+      itm.count = typeof it.count === 'number' ? it.count : 1;
+    }
+    var desc = null;
+    if (b.description) {
+      desc = {
+        contents: toComponent(b.description.contents !== undefined ? b.description.contents : b.description),
+        width: typeof b.description.width === 'number' ? b.description.width : 200
+      };
+    }
+    return {
+      type: 'item', item: itm, description: desc,
+      show_decorations: b.show_decorations !== false,
+      show_tooltip: b.show_tooltip !== false,
+      width: typeof b.width === 'number' ? b.width : 16,
+      height: typeof b.height === 'number' ? b.height : 16
+    };
+  }
+  return null;
+}
+function inputFromJson(inp) {
+  if (!inp || typeof inp !== 'object') return null;
+  var t = String(inp.type || '');
+  var key = String(inp.key || '');
+  var label = toComponent(inp.label);
+  if (t.indexOf('text') !== -1) {
+    var out = blankTextInput();
+    out.key = key; out.label = label;
+    if (typeof inp.width === 'number') out.width = inp.width;
+    if (typeof inp.label_visible === 'boolean') out.label_visible = inp.label_visible;
+    if (typeof inp.initial === 'string') out.initial = inp.initial;
+    if (typeof inp.max_length === 'number') out.max_length = inp.max_length;
+    if (inp.multiline && typeof inp.multiline === 'object') {
+      out.multiline = true;
+      if (typeof inp.multiline.max_lines === 'number') out.max_lines = inp.multiline.max_lines;
+      if (typeof inp.multiline.height === 'number') out.height = inp.multiline.height;
+    }
+    return out;
+  }
+  if (t.indexOf('boolean') !== -1) {
+    var bo = blankBooleanInput();
+    bo.key = key; bo.label = label;
+    if (typeof inp.initial === 'boolean') bo.initial = inp.initial;
+    if (typeof inp.on_true === 'string') bo.on_true = inp.on_true;
+    if (typeof inp.on_false === 'string') bo.on_false = inp.on_false;
+    return bo;
+  }
+  if (t.indexOf('single_option') !== -1) {
+    var so = blankSingleOptionInput();
+    so.key = key; so.label = label;
+    if (typeof inp.label_visible === 'boolean') so.label_visible = inp.label_visible;
+    if (typeof inp.width === 'number') so.width = inp.width;
+    var opts = [];
+    if (Array.isArray(inp.options)) {
+      for (var i = 0; i < inp.options.length; i++) {
+        var o = inp.options[i];
+        if (typeof o === 'string') opts.push({ id: o, display: null, initial: false });
+        else if (o && typeof o === 'object') opts.push({ id: String(o.id || ''), display: o.display !== undefined ? toComponent(o.display) : null, initial: !!o.initial });
+      }
+    }
+    if (opts.length) so.options = opts;
+    return so;
+  }
+  if (t.indexOf('number_range') !== -1) {
+    var nr = blankNumberRangeInput();
+    nr.key = key; nr.label = label;
+    if (typeof inp.label_format === 'string') nr.label_format = inp.label_format;
+    if (typeof inp.width === 'number') nr.width = inp.width;
+    if (typeof inp.start === 'number') nr.start = inp.start;
+    if (typeof inp.end === 'number') nr.end = inp.end;
+    if (typeof inp.initial === 'number') nr.initial = inp.initial;
+    if (typeof inp.step === 'number') nr.step = inp.step;
+    return nr;
+  }
+  return null;
+}
+function dialogFromJson(obj) {
+  var m = blankDialogModel();
+  var legacy = [];
+  ['on_cancel', 'simple_input_form', 'multi_action_input_form'].forEach(function (f) {
+    if (obj[f] !== undefined) legacy.push(f);
+  });
+  m.legacy = legacy;
+  var t = obj.type || 'minecraft:notice';
+  if (t.indexOf(':') === -1) t = 'minecraft:' + t;
+  if (['minecraft:notice', 'minecraft:confirmation', 'minecraft:multi_action', 'minecraft:dialog_list'].indexOf(t) === -1) t = 'minecraft:notice';
+  m.type = t;
+  if (obj.title !== undefined) m.title = toComponent(obj.title);
+  if (obj.external_title !== undefined) m.external_title = toComponent(obj.external_title);
+  var bodyArr = Array.isArray(obj.body) ? obj.body : (obj.body ? [obj.body] : []);
+  for (var i = 0; i < bodyArr.length; i++) { var bb = bodyFromJson(bodyArr[i]); if (bb) m.body.push(bb); }
+  if (Array.isArray(obj.inputs)) {
+    for (var j = 0; j < obj.inputs.length; j++) { var ii = inputFromJson(obj.inputs[j]); if (ii) m.inputs.push(ii); }
+  }
+  if (typeof obj.can_close_with_escape === 'boolean') m.can_close_with_escape = obj.can_close_with_escape;
+  if (typeof obj.pause === 'boolean') m.pause = obj.pause;
+  if (typeof obj.after_action === 'string') m.after_action = obj.after_action;
+  if (typeof obj.columns === 'number') m.columns = obj.columns;
+  if (typeof obj.button_width === 'number') m.button_width = obj.button_width;
+  if (m.type === 'minecraft:notice' && obj.action) m.notice_action = buttonFromJson(obj.action);
+  if (m.type === 'minecraft:confirmation') {
+    if (obj.yes) m.confirm_yes = buttonFromJson(obj.yes);
+    if (obj.no) m.confirm_no = buttonFromJson(obj.no);
+  }
+  if (m.type === 'minecraft:multi_action') {
+    if (Array.isArray(obj.actions)) m.actions = obj.actions.map(buttonFromJson);
+    if (obj.exit_action) m.exit_action = buttonFromJson(obj.exit_action);
+  }
+  if (m.type === 'minecraft:dialog_list') {
+    if (Array.isArray(obj.dialogs)) m.dialogs = obj.dialogs.map(function (d) { return { id: String(d), note: '' }; });
+    if (obj.exit_action) m.exit_action = buttonFromJson(obj.exit_action);
+  }
+  return m;
+}
+
+// ---- zip (无压缩 STORE，离线可用) ----
+function crcTable() {
+  var t = new Uint32Array(256);
+  for (var n = 0; n < 256; n++) {
+    var c = n;
+    for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+}
+function crc32(bytes, table) {
+  var c = 0xFFFFFFFF;
+  for (var i = 0; i < bytes.length; i++) c = table[(c ^ bytes[i]) & 255] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function u32at(a, o, v) {
+  a[o] = v & 255; a[o + 1] = (v >>> 8) & 255; a[o + 2] = (v >>> 16) & 255; a[o + 3] = (v >>> 24) & 255;
+}
+function zipBytes(files) {
+  var table = crcTable();
+  var enc = new TextEncoder();
+  var prepared = [];
+  var locTotal = 0, cenSize = 0;
+  for (var i = 0; i < files.length; i++) {
+    var nb = enc.encode(files[i].name);
+    var db = enc.encode(files[i].data);
+    var p = { name: nb, data: db, crc: crc32(db, table) };
+    prepared.push(p);
+    locTotal += 30 + nb.length + db.length;
+    cenSize += 46 + nb.length;
+  }
+  var total = locTotal + cenSize + 22;
+  var out = new Uint8Array(total);
+  var off = 0;
+  var offsets = [];
+  var date = ((2024 - 1980) << 9) | (1 << 5) | 1;
+  for (var j = 0; j < prepared.length; j++) {
+    var pj = prepared[j];
+    offsets.push(off);
+    out[off++] = 0x50; out[off++] = 0x4b; out[off++] = 0x03; out[off++] = 0x04;
+    out[off++] = 20; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = date & 255; out[off++] = (date >> 8) & 255;
+    u32at(out, off, pj.crc); off += 4;
+    u32at(out, off, pj.data.length); off += 4;
+    u32at(out, off, pj.data.length); off += 4;
+    out[off++] = pj.name.length & 255; out[off++] = (pj.name.length >> 8) & 255;
+    out[off++] = 0; out[off++] = 0;
+    out.set(pj.name, off); off += pj.name.length;
+    out.set(pj.data, off); off += pj.data.length;
+  }
+  var cenStart = off;
+  for (var k = 0; k < prepared.length; k++) {
+    var pk = prepared[k];
+    out[off++] = 0x50; out[off++] = 0x4b; out[off++] = 0x01; out[off++] = 0x02;
+    out[off++] = 20; out[off++] = 0;
+    out[off++] = 20; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = date & 255; out[off++] = (date >> 8) & 255;
+    u32at(out, off, pk.crc); off += 4;
+    u32at(out, off, pk.data.length); off += 4;
+    u32at(out, off, pk.data.length); off += 4;
+    out[off++] = pk.name.length & 255; out[off++] = (pk.name.length >> 8) & 255;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    out[off++] = 0; out[off++] = 0;
+    u32at(out, off, offsets[k]); off += 4;
+    out.set(pk.name, off); off += pk.name.length;
+  }
+  out[off++] = 0x50; out[off++] = 0x4b; out[off++] = 0x05; out[off++] = 0x06;
+  out[off++] = 0; out[off++] = 0;
+  out[off++] = 0; out[off++] = 0;
+  out[off++] = prepared.length & 255; out[off++] = (prepared.length >> 8) & 255;
+  out[off++] = prepared.length & 255; out[off++] = (prepared.length >> 8) & 255;
+  u32at(out, off, cenSize); off += 4;
+  u32at(out, off, cenStart); off += 4;
+  out[off++] = 0; out[off++] = 0;
+  return out;
+}
+
+// ---- 导出/导入 ----
+function exportDialogFile() {
+  var blob = new Blob([dialogJsonString(true)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  var id = (dialogModel.id || 'dialog').replace(/[^a-z0-9_.-]/g, '');
+  a.download = id + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  showToast('已导出 Dialog JSON');
+}
+function importDialogFile() {
+  var file = dlgFileInput.files && dlgFileInput.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      var obj = JSON.parse(e.target.result);
+      var m = dialogFromJson(obj);
+      dialogModel = m;
+      dlgView = { kind: 'general' };
+      renderDialogUI();
+      if (m.legacy && m.legacy.length) showToast('已导入（发现旧版字段：' + m.legacy.join('、') + '，已忽略）');
+      else showToast('已导入 Dialog');
+    } catch (err) {
+      showToast('文件格式不正确');
+    }
+  };
+  reader.readAsText(file);
+}
+function exportDialogPack() {
+  var ns = (dialogModel.namespace || 'mypack').replace(/[^a-z0-9_.-]/g, '');
+  var id = (dialogModel.id || 'dialog').replace(/[^a-z0-9_.-]/g, '');
+  var pf = dlgPackFormat ? parseInt(dlgPackFormat.value, 10) : 80;
+  if (!(pf >= 1)) pf = 80;
+  var files = [
+    { name: 'pack.mcmeta', data: JSON.stringify({ pack: { pack_format: pf, description: 'Minecraft Dialogs' } }, null, 2) },
+    { name: 'data/' + ns + '/dialog/' + id + '.json', data: dialogJsonString(true) }
+  ];
+  var bytes = zipBytes(files);
+  var blob = new Blob([bytes], { type: 'application/zip' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = ns + '-' + id + '-dialog-datapack.zip';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  showToast('已导出数据包 zip');
+}
+
+// ---- init ----
+var dlgTemplate = document.getElementById('dlgTemplate');
+var dlgExportBtn = document.getElementById('dlgExportBtn');
+var dlgImportBtn = document.getElementById('dlgImportBtn');
+var dlgFileInput = document.getElementById('dlgFileInput');
+var dlgPackBtn = document.getElementById('dlgPackBtn');
+var dlgCopyBtn = document.getElementById('dlgCopyBtn');
+
+function currentTemplate() {
+  var radios = document.querySelectorAll('#dlgTemplate input[type="radio"]');
+  for (var i = 0; i < radios.length; i++) if (radios[i].checked) return radios[i].value;
+  return 'blank';
+}
+
+function initDialogMode() {
+  dlgPackFormat = document.getElementById('dlgPackFormat');
+
+  dlgTemplate.addEventListener('change', function () {
+    var v = currentTemplate();
+    if (v === 'task') dialogModel = taskTemplate();
+    else if (v === 'char') dialogModel = charTemplate();
+    else dialogModel = blankDialogModel();
+    dlgView = { kind: 'general' };
+    renderDialogUI();
+  });
+  // 目标选择器（单选按钮）
+  var tRadios = document.querySelectorAll('#dlgTarget input[type="radio"]');
+  for (var ti = 0; ti < tRadios.length; ti++) {
+    (function (r) {
+      r.addEventListener('change', function () {
+        if (r.checked) { dlgTargetValue = r.value; renderDialogOutput(); }
+      });
+    })(tRadios[ti]);
+  }
+  dlgExportBtn.addEventListener('click', exportDialogFile);
+  dlgImportBtn.addEventListener('click', function () { dlgFileInput.click(); });
+  dlgFileInput.addEventListener('change', function () { importDialogFile(); dlgFileInput.value = ''; });
+  dlgPackBtn.addEventListener('click', exportDialogPack);
+  dlgCopyBtn.addEventListener('click', function () {
+    copyText(dialogOutputText(dlgOutTab)).then(function (ok) { showToast(ok ? '已复制' : '复制失败'); });
+  });
+  document.getElementById('dlgOutTabs').addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('[data-tab]') : null;
+    if (t) { dlgOutTab = t.getAttribute('data-tab'); renderDialogOutput(); }
+  });
+  dlgPackFormat.addEventListener('change', renderDialogOutput);
+  dlgPackFormat.addEventListener('input', renderDialogOutput);
+
+  document.getElementById('dlgNav').addEventListener('click', function (e) {
+    var it = e.target.closest ? e.target.closest('[data-view]') : null;
+    if (it) { dlgView = parseView(it.getAttribute('data-view')); renderDialogUI(); }
+  });
+
+  var detail = document.getElementById('dlgDetail');
+  detail.addEventListener('click', function (e) {
+    var ik = e.target.closest ? e.target.closest('[data-insertkey]') : null;
+    if (ik) {
+      var key = ik.getAttribute('data-insertkey');
+      var bind = ik.getAttribute('data-insertbind');
+      var taEl = document.querySelector('#dlgDetail [data-bind="' + bind + '"]');
+      if (taEl) {
+        var st = taEl.selectionStart, en = taEl.selectionEnd;
+        var ins = '$(' + key + ')';
+        var nv = taEl.value.slice(0, st) + ins + taEl.value.slice(en);
+        taEl.value = nv;
+        taEl.selectionStart = taEl.selectionEnd = st + ins.length;
+        taEl.focus();
+        modelSetPath(dialogModel, bind, nv);
+        updateKeyUse();
+        onDlgMutated(false);
+      }
+      return;
+    }
+    var cc = e.target.closest ? e.target.closest('[data-clearcomp]') : null;
+    if (cc) {
+      modelSetPath(dialogModel, cc.getAttribute('data-clearcomp'), null);
+      renderDialogUI();
+      return;
+    }
+    var edit = e.target.closest ? e.target.closest('[data-edit]') : null;
+    if (edit) {
+      beginFieldEdit(edit.getAttribute('data-edit'), edit.getAttribute('data-editlabel') || '文本组件');
+      return;
+    }
+    var go = e.target.closest ? e.target.closest('[data-goto]') : null;
+    if (go) { dlgView = parseView(go.getAttribute('data-goto')); renderDialogUI(); return; }
+    var act = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (act) {
+      handleDlgAction(act.getAttribute('data-action'), act.getAttribute('data-arg'), act.getAttribute('data-arg2'), act.getAttribute('data-dir'));
+      return;
+    }
+  });
+  detail.addEventListener('input', onDetailInput);
+  detail.addEventListener('change', onDetailChange);
+
+  document.getElementById('modeTextBtn').addEventListener('click', function () { showView('text'); });
+  document.getElementById('modeDialogBtn').addEventListener('click', function () { if (fieldEditState) endFieldEdit(false); showView('dialog'); });
+  document.getElementById('fieldEditDone').addEventListener('click', function () { endFieldEdit(true); showView('dialog'); });
+  document.getElementById('fieldEditCancel').addEventListener('click', function () { endFieldEdit(false); showView('dialog'); });
+
+  renderDialogUI();
+}
+
+initDialogMode();
+})();
+</script>
+</body>
+</html>
